@@ -1,0 +1,8 @@
+config.json
+dist
+*.bak
+.DS_Store
+node_modules
+build
+target
+*.log

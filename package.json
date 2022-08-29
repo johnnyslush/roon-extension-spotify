@@ -1,0 +1,40 @@
+{
+    "name": "roon-extension-spotify",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "bin": "index.js",
+    "scripts": {
+        "build": "pkg package.json"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "node-roon-api": "github:roonlabs/node-roon-api",
+        "node-roon-api-settings": "github:roonlabs/node-roon-api-settings",
+        "node-roon-api-status": "github:roonlabs/node-roon-api-status",
+        "node-roon-api-transport": "github:roonlabs/node-roon-api-transport",
+        "node-roon-api-audioinput": "github:roonlabs/node-roon-api-audioinput",
+        "pino": "^8.4.1",
+        "pino-pretty": "^9.0.1"
+    },
+    "pkg": {
+        "scripts": [
+            "./node_modules/thread-stream/lib/worker.js"
+        ],
+        "patches": {
+            "./node_modules/thread-stream/lib/worker.js": [
+                "fn = (await realImport(filename))",
+                "fn = realRequire(filename.replace(/file:\\/\\/?/, ''))"
+            ],
+            "./node_modules/pino/lib/transport-stream.js": [
+                "fn = (await realImport(toLoad))",
+                "fn = realRequire(target)"
+            ]
+        },
+        "outputPath": "dist"
+    },
+    "devDependencies": {
+        "pkg": "^5.8.0"
+    }
+}
