@@ -127,10 +127,8 @@ async fn stream(
     let (zone_id,req_track_id) = path.into_inner();
     let headers = req.headers();
         let start = SystemTime::now();
-    info!("REQ: {start:?}");
-    info!("REQ ZONE: {zone_id:?}");
-    info!("REQ TRACK: {req_track_id:?}");
-    info!("REQ HEADERS: {headers:?}");
+    info!("HTTP REQ ZONE: {}", zone_id);
+    info!("     REQ TRACK: {}", req_track_id);
     // XXX Roon doesnt use the range-end portion 
     // of the range request header, so always assuming start -> end of file
     // for now.

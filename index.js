@@ -31,8 +31,8 @@ for (const name of Object.keys(nets)) {
     }
 }
 
-let zones = {
-};
+let sessions = {};
+let zones    = {};
 
 let global_core;
 let host;
@@ -128,6 +128,8 @@ async function handle_core_unpaired(core) {
     logger.info('stopping host and deleting');
     await host.stop();
     logger.info('succesfully stopped host');
+    sessions = {};
+    zones    = {};
 }
 
 const roon = new RoonApi({
@@ -150,7 +152,6 @@ roon.init_services({
 });
 
 roon.start_discovery();
-let sessions = {};
 
 async function getOrCreateSession(zone_id) {
     if (sessions[zone_id]) return sessions[zone_id];
@@ -226,31 +227,29 @@ function getNowPlaying(now_playing_info) {
 
     if (now_playing_info.album_name || !now_playing_info.show_name) {
         info.one_line = {
-            line1: `${now_playing_info.name} by ${now_playing_info.artists[0] || ''}`,
+            line1: `${now_playing_info.name} - ${now_playing_info.artists[0] || ''}`,
         };
         info.two_line = {
-            line1: `${now_playing_info.name} by ${now_playing_info.artists[0] || ''}`,
-            line2: `on ${now_playing_info.album_name}`,
+            line1: `${now_playing_info.name}`,
+            line2: `${now_playing_info.artists.join(' / ')}`,
         };
         info.three_line = {
             line1: `${now_playing_info.name}`,
-            line2: `by ${now_playing_info.artists[0] || ''}`,
-            line3: `on ${now_playing_info.album_name}`,
+            line2: `${now_playing_info.artists.join(' / ')}`,
+            line3: `${now_playing_info.album_name}`,
         };
     } else if (now_playing_info.show_name) {
         info.one_line = {
-            line1: `${now_playing_info.name} / ${now_playing_info.show_name}`,
+            line1: `${now_playing_info.name} - ${now_playing_info.show_name}`,
         };
         info.two_line = {
-            line1: `${now_playing_info.name} / ${now_playing_info.show_name}`,
-            line2: ''
-            // XXX line2: `${now_playing_info.episode.publish_date}`,
+            line1: `${now_playing_info.name}`,
+            line2: `${now_playing_info.show_name}`
         };
         info.three_line = {
             line1: `${now_playing_info.name}`,
             line2: `${now_playing_info.show_name}`,
             line3: ''
-            // XXX line3: `${now_playing_info.episode.publish_date}`,
         };
     } else {
         info.one_line   = { line1: "Unknown" };

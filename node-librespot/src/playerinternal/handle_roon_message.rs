@@ -249,7 +249,8 @@ impl PlayerInternal {
             self.send_event(PlayerEvent::Stopped {
                 track_id,
                 play_request_id,
-            })
+            });
+            self.state = PlayerState::Stopped;
         }
     }
 
