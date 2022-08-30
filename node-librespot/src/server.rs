@@ -1,4 +1,3 @@
-use log::{info, debug};
 use actix_web::{
     body::{
         SizedStream

@@ -1,4 +1,3 @@
-use log::{warn,error};
 use crate::zone::{RoonMessage};
 use std::process::exit;
 use std::mem;

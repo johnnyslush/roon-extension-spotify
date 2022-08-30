@@ -1,4 +1,4 @@
-use log::{warn, info, error};
+use simplelog::*;
 use sha1::{Digest, Sha1};
 use tokio::sync::mpsc::{UnboundedSender};
 

@@ -1,5 +1,4 @@
 // Port from librespot spirc.rs
-use log::{warn, info, error, debug, trace};
 use std::future::Future;
 use std::pin::Pin;
 use std::time::{SystemTime, UNIX_EPOCH};

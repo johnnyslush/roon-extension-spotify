@@ -1,5 +1,4 @@
 // Port from librespot player.rs
-use log::{error};
 use std::future::Future;
 use std::pin::Pin;
 use std::{thread};

@@ -1,5 +1,4 @@
 // Port from librespot player.rs
-use log::{debug, warn, info, error};
 use std::process::exit;
 use std::future::Future;
 use std::io::{self, Read, Seek, SeekFrom};

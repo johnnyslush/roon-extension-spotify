@@ -9,10 +9,11 @@ const path              = require('path');
 const { Host }          = require('./node-librespot/index.js');
 
 /////////
+const log_dir = process.argv[0].endsWith('node') ? process.cwd() : path.join(process.execPath, '..');
 const transport = pino.transport({
     targets: [
         { target: 'pino-pretty' },
-        { target: path.join(__dirname,'transport.js'), options: { destination: './roon-extension-spotify.log' }},
+        { target: path.join(__dirname,'transport.js'), options: { destination: path.join(log_dir, '/roon-extension-spotify.log') }},
     ]
 });
 const logger = pino(transport);
@@ -41,6 +42,7 @@ async function handle_core_paired(core) {
     if (!host) {
         // Create new host
         host = new Host({
+            log_dir,
             base_url: librespot_http_url === "127.0.0.1" ? librespot_http_url : "0.0.0.0", // Host to listen on locally
             listen_port: null,
             callbacks: {

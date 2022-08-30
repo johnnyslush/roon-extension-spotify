@@ -1,9 +1,6 @@
 #![allow(clippy::unused_io_amount)]
 
-use log::*;
-
 use async_trait::async_trait;
-
 
 use std::collections::HashMap;
 use std::string::FromUtf8Error;
@@ -279,7 +276,6 @@ impl Metadata for Track {
             .get_file()
             .iter()
             .map(|file| {
-                info!("{file:?}");
                 file
             })
             .filter_map(|file| {
@@ -349,7 +345,6 @@ impl Metadata for Album {
             .get_image()
             .iter()
             .map(|image| {
-                info!("GOT IMAGE: {image:?}");
                 image
             })
             .filter_map(|image| {
@@ -357,7 +352,6 @@ impl Metadata for Album {
                     let mut dst = [0u8; 20];
                     dst.clone_from_slice(image.get_file_id());
                     let r = Some(FileId(dst));
-                    info!("{r:?}");
                     r
                 } else {
                     None

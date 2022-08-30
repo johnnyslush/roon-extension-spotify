@@ -5,7 +5,6 @@ use tokio;
 use tokio::sync::mpsc::{unbounded_channel};
 use tokio::sync::mpsc::{UnboundedSender};
 use std::thread;
-use log::{info};
 use actix_web::{rt};
 use serde::de::{DeserializeOwned};
 use serde_json;
@@ -13,9 +12,13 @@ use neon::object::This;
 use std::thread::JoinHandle;
 use std::sync::mpsc::channel;
 use actix_web::dev::ServerHandle;
-use env_logger::{Target};
+#[macro_use] extern crate log;
+extern crate simplelog;
 use simplelog::*;
 use std::fs::File;
+use std::path::Path;
+use std::env;
+use std::process::exit;
 
 mod playerinternal;
 mod metadata;
@@ -267,17 +270,29 @@ impl Host {
 
 #[neon::main]
  fn main(mut cx: ModuleContext) -> NeonResult<()> {
-     CombinedLogger::init(
-         vec![
-         SimpleLogger::new(LevelFilter::Info, Config::default()),
-         WriteLogger::new(LevelFilter::Info, Config::default(), File::create("roon-extension-spotify-rs.log").unwrap()),
-     ]
-     ).unwrap();
-     /*
-    env_logger::Builder::new()
-        .target(Target::Stdout)
-        .parse_filters("libmdns=info,librespot=info").init();
-        */
+     match env::current_exe() {
+         Ok(exe_path) => { 
+             let log_dir;
+             if exe_path.ends_with("node") {
+                 log_dir = Path::new("./").join("roon-extension-spotify-rs.log");
+             } else {
+                 log_dir = Path::new(&exe_path).parent().unwrap().join("roon-extension-spotify-rs.log");
+                 println!("{}",log_dir.display());
+             }
+             // Set up logging
+             CombinedLogger::init(
+                 vec![
+                     SimpleLogger::new(LevelFilter::Info, Config::default()),
+                     WriteLogger::new(LevelFilter::Debug, Config::default(), File::create(log_dir).unwrap()),
+                 ]
+             ).unwrap();
+         },
+         Err(e) => {
+             error!("Could not find log path");
+             exit(1);
+        },
+     };
+
     cx.export_function("init",               Host::js_new)?;
     cx.export_function("stop",               Host::js_stop)?;
     cx.export_function("start",              Host::js_start)?;
