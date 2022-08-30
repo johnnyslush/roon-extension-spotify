@@ -227,7 +227,7 @@ function getNowPlaying(now_playing_info) {
 
     if (now_playing_info.album_name || !now_playing_info.show_name) {
         info.one_line = {
-            line1: `${now_playing_info.name} - ${now_playing_info.artists[0] || ''}`,
+            line1: `${now_playing_info.name} - ${now_playing_info.artists.join('/')}`,
         };
         info.two_line = {
             line1: `${now_playing_info.name}`,
