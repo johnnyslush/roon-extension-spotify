@@ -1,10 +1,10 @@
 # roon-extension-spotify 
-*roon-extension-spotify* allows roon zones to appear as spotify connect devices. Under the hood is uses the [node-roon-api](https://github.com/RoonLabs/node-roon-api) and [librespot](https://github.com/librespot-org/librespot).
+*roon-extension-spotify* allows roon zones to appear as spotify connect devices. Under the hood it uses the [node-roon-api](https://github.com/RoonLabs/node-roon-api) and [librespot](https://github.com/librespot-org/librespot).
 # Quickstart
 TBD
 # Building
 ### Install Node.js
-Follow the instructions for installing node.js [here](https://nodejs.org/en/download/package-manager/) and verify you have both node and npm:
+Follow the instructions for installing node.js [here](https://nodejs.org/en/download/package-manager/) and verify you have both node and npm installed:
 ```
 /# node
 Welcome to Node.js v16.17.0.
@@ -20,7 +20,7 @@ Usage:
 npm install        install all the dependencies in your project
 ```
 ### Install Rust
-Follow the instructions to install [rustup](https://rustup.rs/). After this you should be able to access cargo:
+Follow the instructions to install [rustup](https://rustup.rs/) and verfiy you have cargo installed:
 ```
 /# cargo
 Rust's package manager
@@ -35,7 +35,7 @@ You should be set for Mac and Windows, for Debian/Ubuntu run these commands:
 sudo apt-get install build-essential
 sudo apt-get install libasound2-dev pkg-config
 ```
-and on Fedora this:
+and on Fedora run these:
 ```
 sudo dnf install gcc
 sudo dnf install alsa-lib-devel
@@ -60,6 +60,7 @@ Run directly from node:
 ```
 node .
 ```
+### Executables (in-development)
 You can also build binaries for Mac, Linux, and Windows. Execute the below command and look for the output in the dist/ directory:
 ```
 npm run build
