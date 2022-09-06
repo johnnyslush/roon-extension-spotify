@@ -4,9 +4,10 @@ use tokio::sync::mpsc::{UnboundedSender};
 
 use librespot::core::config::{ConnectConfig, DeviceType, SessionConfig};
 use librespot::playback::config::{PlayerConfig};
-use crate::spirc::Spirc;
+use librespot::connect::spirc::Spirc;
 use librespot::core::session::Session;
 use librespot::playback::mixer::{self, MixerConfig};
+use librespot::metadata::{AudioItem};
 
 // Custom player
 use futures_util::{future, FutureExt, StreamExt};
@@ -20,7 +21,6 @@ use std::sync::{Arc, Mutex};
 
 use serde::{Serialize, Deserialize};
 use crate::server::{ServerMessage};
-use crate::metadata::{AudioItem};
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]

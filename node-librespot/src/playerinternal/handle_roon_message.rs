@@ -339,7 +339,6 @@ impl PlayerInternal {
             }
         };
         self.send_event(PlayerEvent::VolumeSet {
-            play_request_id: None,
             volume
         })
     }

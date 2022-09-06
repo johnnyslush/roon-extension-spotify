@@ -1358,7 +1358,7 @@ dependencies = [
  "futures-util",
  "hex",
  "http-range",
- "librespot 0.4.1",
+ "librespot 0.4.2",
  "log",
  "neon",
  "protobuf",
@@ -1373,9 +1373,8 @@ dependencies = [
 
 [[package]]
 name = "librespot"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66751b7ff244f3d0e4da3047d8684dbae15630809e507dda805fa77ee9df6f67"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "base64",
  "env_logger",
@@ -1400,9 +1399,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-audio"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "735f611dc3326848621fc7ed805b83854b9a1d8cfedfb4b57ed3fe61b54df379"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "aes-ctr",
  "byteorder",
@@ -1416,9 +1414,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-connect"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34016ebba0b3356b8f18f74ef1d2ec0caa9ecc52ae1c6b5a12fe0ab1c4ab5a7e"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "form_urlencoded",
  "futures-util",
@@ -1437,9 +1434,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-core"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "998986b329ebeb586b93c9d27e3d90c42756cdd7c7cc75812fd2f0ddb999b8c8"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "aes",
  "base64",
@@ -1478,9 +1474,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-discovery"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9fd73284c5a1b08eeb89ea37a9f612b252928b545127c16742595f1a7d47fcd"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "aes-ctr",
  "base64",
@@ -1500,9 +1495,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-metadata"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "174737c59421237e33527589f793ba2b1a548c1eca59ab58af9e4f2a56de18f5"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -1514,9 +1508,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-playback"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4175b33a26625aa9bd7059cc1688e1e4f87b30ee6a6f7c63dc5118a3c14ec3b8"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "byteorder",
  "cpal",
@@ -1540,9 +1533,8 @@ dependencies = [
 
 [[package]]
 name = "librespot-protocol"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e21de16aa66ab2a7b3c40a5a847a659b1b3cb66a67da6a63731d28d4788535d"
+version = "0.4.2"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#0352cf5a5de742a6cec7c308224f4d1513f6e23b"
 dependencies = [
  "glob",
  "protobuf",

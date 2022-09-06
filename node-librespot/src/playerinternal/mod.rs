@@ -13,14 +13,15 @@ use tokio::sync::{mpsc, oneshot};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use crate::player::*;
-use crate::metadata::{AudioItem, FileFormat};
-use crate::decrypt::{AudioDecrypt};
 use crate::server::{ServerMessage};
 use crate::zone::{SpotifyJSEvent, RoonNowPlaying, RoonMessage};
-use librespot::audio::{AudioFile};
+
+use librespot::playback::player::{PlayerEvent};
+use librespot::audio::{AudioFile, AudioDecrypt};
 use librespot::playback::config::{Bitrate, PlayerConfig};
 use librespot::core::session::Session;
 use librespot::core::spotify_id::SpotifyId;
+use librespot::metadata::{AudioItem, FileFormat};
 
 const PRELOAD_NEXT_TRACK_BEFORE_END_DURATION_MS: u32 = 30000;
 

@@ -21,10 +21,7 @@ use std::env;
 use std::process::exit;
 
 mod playerinternal;
-mod metadata;
 mod zone;
-mod spirc;
-mod decrypt;
 mod player;
 mod server;
 mod devices;

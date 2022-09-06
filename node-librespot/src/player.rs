@@ -9,6 +9,9 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use crate::playerinternal::*;
 use crate::server::{ServerMessage};
 use crate::zone::{SpotifyJSEvent,RoonMessage};
+
+use librespot::playback::player::{PlayerEventChannel, PlayerEvent};
+use librespot::connect::spirc::{PlayerImpl};
 use librespot::playback::config::{PlayerConfig};
 use librespot::core::session::Session;
 use librespot::core::spotify_id::SpotifyId;
@@ -40,104 +43,6 @@ pub enum PlayerCommand {
     EmitVolumeSetEvent(u16),
     SetAutoNormaliseAsAlbum(bool),
 }
-
-#[derive(Debug, Clone)]
-pub enum PlayerEvent {
-    // Used to proxy previous track selected in roon to spirc
-    Prev {
-        play_request_id: u64,
-    },
-
-    // Fired when the player is stopped (e.g. by issuing a "stop" command to the player).
-    Stopped {
-        play_request_id: u64,
-        track_id: SpotifyId,
-    },
-    // The player is delayed by loading a track.
-    Loading {
-        play_request_id: u64,
-        track_id: SpotifyId,
-        position_ms: u32,
-    },
-    // The player is playing a track.
-    // This event is issued at the start of playback of whenever the position must be communicated
-    // because it is out of sync. This includes:
-    // start of a track
-    // un-pausing
-    // after a seek
-    // after a buffer-underrun
-    Playing {
-        play_request_id: u64,
-        track_id: SpotifyId,
-        position_ms: u32,
-        duration_ms: u32,
-    },
-    // The player entered a paused state.
-    Paused {
-        play_request_id: u64,
-        track_id: SpotifyId,
-        position_ms: u32,
-        duration_ms: u32,
-    },
-    // The player thinks it's a good idea to issue a preload command for the next track now.
-    // This event is intended for use within spirc.
-    TimeToPreloadNextTrack {
-        play_request_id: u64,
-        track_id: SpotifyId,
-    },
-    // The player reached the end of a track.
-    // This event is intended for use within spirc. Spirc will respond by issuing another command
-    // which will trigger another event (e.g. Changed or Stopped)
-    EndOfTrack {
-        play_request_id: u64,
-        track_id: SpotifyId,
-    },
-    // The player was unable to load the requested track.
-    Unavailable {
-        play_request_id: u64,
-        track_id: SpotifyId,
-    },
-    // The mixer volume was set to a new level.
-    VolumeSet {
-        play_request_id: Option<u64>,
-        volume: u16,
-    },
-}
-
-impl PlayerEvent {
-    pub fn get_play_request_id(&self) -> Option<u64> {
-        use PlayerEvent::*;
-        match self {
-            Prev {
-                play_request_id, ..
-            }
-            | Loading {
-                play_request_id, ..
-            }
-            | Unavailable {
-                play_request_id, ..
-            }
-            | Playing {
-                play_request_id, ..
-            }
-            | TimeToPreloadNextTrack {
-                play_request_id, ..
-            }
-            | EndOfTrack {
-                play_request_id, ..
-            }
-            | Paused {
-                play_request_id, ..
-            }
-            | Stopped {
-                play_request_id, ..
-            } => Some(*play_request_id),
-            VolumeSet { .. } => None,
-        }
-    }
-}
-
-pub type PlayerEventChannel = mpsc::UnboundedReceiver<PlayerEvent>;
 
 impl Player {
     pub fn new(
@@ -190,8 +95,11 @@ impl Player {
             }
         }
     }
+}
 
-    pub fn load(&mut self, track_id: SpotifyId, start_playing: bool, position_ms: u32) -> u64 {
+impl PlayerImpl for Player {
+
+    fn load(&mut self, track_id: SpotifyId, start_playing: bool, position_ms: u32) -> u64 {
         let play_request_id = self.play_request_id_generator.get();
         self.command(PlayerCommand::Load {
             track_id,
@@ -203,37 +111,37 @@ impl Player {
         play_request_id
     }
 
-    pub fn preload(&self, track_id: SpotifyId) {
+    fn preload(&self, track_id: SpotifyId) {
         self.command(PlayerCommand::Preload { track_id });
     }
 
-    pub fn play(&self) {
+    fn play(&self) {
         self.command(PlayerCommand::Play)
     }
 
-    pub fn pause(&self) {
+    fn pause(&self) {
         self.command(PlayerCommand::Pause)
     }
 
-    pub fn stop(&self) {
+    fn stop(&self) {
         self.command(PlayerCommand::Stop)
     }
 
-    pub fn seek(&self, position_ms: u32) {
+    fn seek(&self, position_ms: u32) {
         self.command(PlayerCommand::Seek(position_ms));
     }
 
-    pub fn get_player_event_channel(&self) -> PlayerEventChannel {
+    fn get_player_event_channel(&self) -> PlayerEventChannel {
         let (event_sender, event_receiver) = mpsc::unbounded_channel();
         self.command(PlayerCommand::AddEventSender(event_sender));
         event_receiver
     }
 
-    pub fn emit_volume_set_event(&self, volume: u16) {
+    fn emit_volume_set_event(&self, volume: u16) {
         self.command(PlayerCommand::EmitVolumeSetEvent(volume));
     }
 
-    pub fn set_auto_normalise_as_album(&self, setting: bool) {
+    fn set_auto_normalise_as_album(&self, setting: bool) {
         self.command(PlayerCommand::SetAutoNormaliseAsAlbum(setting));
     }
 }
