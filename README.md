@@ -3,62 +3,22 @@
 # Quickstart
 TBD
 # Building
-### Install Node.js
-Follow the instructions for installing node.js [here](https://nodejs.org/en/download/package-manager/) and verify you have both node and npm installed:
-```
-/# node
-Welcome to Node.js v16.17.0.
-Type ".help" for more information.
->
-```
-```
-/# npm
-npm <command>
-
-Usage:
-
-npm install        install all the dependencies in your project
-```
-### Install Rust
-Follow the instructions to install [rustup](https://rustup.rs/) and verfiy you have cargo installed:
-```
-/# cargo
-Rust's package manager
-
-USAGE:
-    cargo [+toolchain] [OPTIONS] [SUBCOMMAND]
-    ...
-```
-### Dependencies
-You should be set for Mac and Windows, for Debian/Ubuntu run these commands:
-```
-sudo apt-get install build-essential
-sudo apt-get install libasound2-dev pkg-config
-```
-and on Fedora run these:
-```
-sudo dnf install gcc
-sudo dnf install alsa-lib-devel
-```
-See [librespot](https://github.com/librespot-org/librespot/blob/master/COMPILING.md) documentation for further details.
-
+### Install Node.js and Rust
+- [node.js](https://nodejs.org/en/download/package-manager/)
+- [rust](https://rustup.rs/)
 ### Source code
 Clone this repository:
 ```
 git clone git@github.com:johnnyslush/roon-extension-spotify.git
 ```
 ## Compiling and Running
-cd into the node-librespot subdirectory, install all dependencies, and build the rust bindings:
+Build the rust bindings:
 ```
 cd node-librespot && npm i
 ```
-Install remaining dependencies at the root directory of roon-extension-spotify:
+Install remaining dependencies and run:
 ```
-cd .. && npm i
-```
-Run directly from node:
-```
-node .
+cd .. && npm i && node .
 ```
 ### Executables (in-development)
 You can also build binaries for Mac, Linux, and Windows. Execute the below command and look for the output in the dist/ directory:
