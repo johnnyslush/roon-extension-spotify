@@ -1195,7 +1195,7 @@ dependencies = [
 [[package]]
 name = "librespot"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "base64",
  "env_logger",
@@ -1221,7 +1221,7 @@ dependencies = [
 [[package]]
 name = "librespot-audio"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "aes-ctr",
  "byteorder",
@@ -1236,7 +1236,7 @@ dependencies = [
 [[package]]
 name = "librespot-connect"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "form_urlencoded",
  "futures-util",
@@ -1256,7 +1256,7 @@ dependencies = [
 [[package]]
 name = "librespot-core"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "aes",
  "base64",
@@ -1296,7 +1296,7 @@ dependencies = [
 [[package]]
 name = "librespot-discovery"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "aes-ctr",
  "base64",
@@ -1317,7 +1317,7 @@ dependencies = [
 [[package]]
 name = "librespot-metadata"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "async-trait",
  "byteorder",
@@ -1330,7 +1330,7 @@ dependencies = [
 [[package]]
 name = "librespot-playback"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "byteorder",
  "futures-executor",
@@ -1353,7 +1353,7 @@ dependencies = [
 [[package]]
 name = "librespot-protocol"
 version = "0.4.2"
-source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#3af5b1e04d46b3476e9e427da48eaeaaa3b11a8c"
+source = "git+https://github.com/johnnyslush/librespot.git?branch=roon-extension-spotify#e9337603bd49e1c92d13685642855c250b7cf51a"
 dependencies = [
  "glob",
  "protobuf",
