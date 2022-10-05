@@ -271,16 +271,17 @@ impl Host {
          Ok(exe_path) => { 
              let log_dir;
              if exe_path.ends_with("node") {
-                 log_dir = Path::new("./").join("roon-extension-spotify-rs.log");
+                 log_dir = Path::new("./").join("roon-extension-spotify.log");
              } else {
-                 log_dir = Path::new(&exe_path).parent().unwrap().join("roon-extension-spotify-rs.log");
+                 log_dir = Path::new(&exe_path).parent().unwrap().join("roon-extension-spotify.log");
                  println!("{}",log_dir.display());
              }
+             File::create(log_dir.clone());
              // Set up logging
              CombinedLogger::init(
                  vec![
                      SimpleLogger::new(LevelFilter::Info, Config::default()),
-                     WriteLogger::new(LevelFilter::Debug, Config::default(), File::create(log_dir).unwrap()),
+                     WriteLogger::new(LevelFilter::Info,  Config::default(), File::options().append(true).open(log_dir).unwrap()),
                  ]
              ).unwrap();
          },
