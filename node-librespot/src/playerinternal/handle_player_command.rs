@@ -73,6 +73,10 @@ impl PlayerInternal {
                     suggested_to_preload_next_track,
                 };
             }
+       } else if let PlayerState::Loading {
+           ..
+       } = self.state {
+           warn!("Called handle_play while in loading state, ignoring");
        } else {
            error!("Called handle_play while not in paused state");
            exit(1);
@@ -218,6 +222,14 @@ impl PlayerInternal {
                     // XXX Fix stream here with a seek;
                     // XXX Update state!
                     // XXX Roon should be the one to say on to next in this situation?
+                    
+
+                    info!("Requested track id {:?} was already loaded, setting state to playing", track_id);
+                    self.send_to_roon(SpotifyJSEvent::Play {
+                        zone_id:          self.zone_id.clone(),
+                        now_playing_info: RoonNowPlaying::new(loaded_track.audio.clone()),
+                        position_ms:      loaded_track.start_position_ms.clone()
+                    });
                     self.state = PlayerState::Playing {
                         track_id,
                         play_request_id,
@@ -231,6 +243,8 @@ impl PlayerInternal {
                     error!("PlayerInternal handle_command_load: Invalid PlayerState");
                     exit(1);
                 }
+            } else {
+                info!("Requested track id {:?} does not equal loaded_track_id {:?}, setting up loader", track_id, loaded_track_id);
             }
         }
 

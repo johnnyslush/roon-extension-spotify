@@ -199,32 +199,40 @@ impl PlayerInternal {
         // are at in the track. Update our state and relay to spotify
         info!(">>>> GOT ROON TIME MESSAGE");
 
-        if let RoonMessage::Time { seek_position_ms, .. } = msg {
+        if let RoonMessage::Time { seek_position_ms, track_id, .. } = msg {
             
             if let PlayerState::Playing {
-                track_id,
+                track_id: playing_track_id,
                 play_request_id,
                 ref mut position_ms,
                 duration_ms,
                 ..
             } = self.state {
+                if track_id != playing_track_id.to_uri().unwrap() {
+                    warn!("Got roon time message for stale track id, ignoring, {} != {:?}", track_id, playing_track_id);
+                    return;
+                }
                 *position_ms = seek_position_ms;
                 self.send_event(PlayerEvent::Playing {
-                    track_id,
+                    track_id: playing_track_id,
                     play_request_id,
                     position_ms: seek_position_ms,
                     duration_ms,
                 });
             } else if let PlayerState::Paused {
-                track_id,
+                track_id: paused_track_id,
                 play_request_id,
                 ref mut position_ms,
                 duration_ms,
                 ..
             } = self.state{
+                if track_id != paused_track_id.to_uri().unwrap() {
+                    warn!("Got roon time message for stale track id, ignoring, {} != {:?}", track_id, paused_track_id);
+                    return;
+                }
                 *position_ms = seek_position_ms;
                 self.send_event(PlayerEvent::Paused {
-                    track_id,
+                    track_id: paused_track_id,
                     play_request_id,
                     position_ms: seek_position_ms,
                     duration_ms,

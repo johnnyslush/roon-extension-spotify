@@ -268,9 +268,7 @@ async function spotify_tells_us_to_play({
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
 
-    logger.info('CALLING ROON PLAY API WITH' +  info);
-
-    global_core.services.RoonApiAudioInput.play({
+    const play_body = {
         session_id,
         track_id: now_playing_info.track_id,
         type: "track",
@@ -278,7 +276,10 @@ async function spotify_tells_us_to_play({
         media_url: `http://${librespot_http_url}:${librespot_http_port}/stream/${zone_id}/${now_playing_info.track_id}`,
         seek_position_ms: position_ms,
         info
-    }, (msg, body) => {
+    };
+    logger.info(play_body);
+
+    global_core.services.RoonApiAudioInput.play(play_body, (msg, body) => {
         logger.info({msg: "PLAY", message:msg, body})
         if (!msg) return;
         const event = msg.name;
@@ -293,6 +294,7 @@ async function spotify_tells_us_to_play({
                 type:        'Time',
                 id:          zone_id,
                 seek_position_ms: body.seek_position_ms || 0,
+                track_id:         now_playing_info.track_id
             });
         } else if (event == "Playing") {
             host.send_roon_message({
@@ -331,9 +333,7 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
     logger.info('spotify told us to preload ' + zone_id);
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
-
-    logger.info({msg: "CALLING ROON PLAY FOR QUEUE SLOT WITH", info});
-    global_core.services.RoonApiAudioInput.play({
+    const play_body  = {
         session_id,
         track_id: now_playing_info.track_id,
         type: "track",
@@ -341,7 +341,9 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
         media_url: `http://${librespot_http_url}:${librespot_http_port}/stream/${zone_id}/${now_playing_info.track_id}`,
         seek_position_ms: 0,
         info
-    },
+    }
+    logger.info(play_body);
+    global_core.services.RoonApiAudioInput.play(play_body,
         (msg, body) => {
         logger.info({msg: "PLAY", message: msg, body})
         const event = msg.name;
@@ -352,9 +354,10 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
             });
         } else if (event == "Time") {
             host.send_roon_message({
-                type:        'Time',
-                id:          zone_id,
+                type:             'Time',
+                id:               zone_id,
                 seek_position_ms: body.seek_position_ms || 0,
+                track_id:         now_playing_info.track_id
             });
         } else if (event == "Playing") {
             host.send_roon_message({

@@ -126,8 +126,9 @@ pub enum RoonMessage {
         volume: u16
     },
     Time {
-        id:     String,
-        seek_position_ms: u32
+        id:               String,
+        seek_position_ms: u32,
+        track_id:         String
     },
 }
 
