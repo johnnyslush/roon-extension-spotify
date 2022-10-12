@@ -272,14 +272,6 @@ async function spotify_tells_us_to_play({
     position_ms
 }) {
     
-    // This was already queued up, just let roon play
-    if (slots?.queue?.track_id === now_playing_info.track_id) {
-        logger.info({status: 'spotify told us to play, but we already queued this track, passing through', slots, now_playing_info});
-        slots.play = slots.queue;
-        slots.queue = null;
-        return;
-    }
-
     logger.info('spotify told us to play ' + zone_id);
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
