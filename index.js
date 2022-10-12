@@ -130,6 +130,7 @@ async function handle_core_unpaired(core) {
     logger.info('succesfully stopped host');
     sessions = {};
     zones    = {};
+    slots    = { play: null, queue: null };
 }
 
 const roon = new RoonApi({
@@ -364,6 +365,7 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
     global_core.services.RoonApiAudioInput.play(play_body,
         (msg, body) => {
         logger.info({starting_slot: 'QUEUE', message: msg, body})
+        if (!msg) return;
         const event = msg.name;
         if (event == "OnToNext") {
             host.send_roon_message({

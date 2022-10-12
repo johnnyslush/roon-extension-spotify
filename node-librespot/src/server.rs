@@ -145,11 +145,17 @@ async fn stream(
 
     let state = data.lock().unwrap();
     let (responder, receiver) = channel::<ServerReply>();
-    state.devices_tx.send(ServerMessage::TrackInfo {
+    match state.devices_tx.send(ServerMessage::TrackInfo {
         zone_id:   zone_id.clone(),
         track_id:  req_track_id.clone(),
         responder
-    }).unwrap();
+    }) {
+        Err(e) => {
+            error!("Error sending track info request to devices thread {}", e);
+            return HttpResponse::build(StatusCode::NOT_FOUND).finish();
+        },
+        _ => ()
+    };
     info!("TRACK INFO REQ");
     let file_size;
     match receiver.recv()
