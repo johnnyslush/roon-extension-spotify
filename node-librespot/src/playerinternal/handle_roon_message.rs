@@ -293,8 +293,7 @@ impl PlayerInternal {
                 play_request_id,
             })
         } else {
-            error!("Got roon on to next message while not in playing state");
-            exit(1);
+            warn!("Got roon on to next message while not in playing state");
         }
     }
 

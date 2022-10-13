@@ -99,7 +99,22 @@ async function handle_core_paired(core) {
                         const volumeHandle = oldz.outputs[0].volume;
                         if (z && z.outputs.length == 1 && z.outputs[0].volume && z.outputs[0].volume.step) {
                             const newVolumeHandle = z.outputs[0].volume;
-                            if (volumeHandle.value != newVolumeHandle.value) {
+                            if (volumeHandle.is_muted != newVolumeHandle.is_muted) {
+                                if (newVolumeHandle.is_muted) {
+                                    host.send_roon_message({
+                                        type:   'Volume',
+                                        id:     z.zone_id,
+                                        volume: 0
+                                    });
+                                } else {
+                                    const newVolume = Math.ceil(((newVolumeHandle.value - newVolumeHandle.min) / (newVolumeHandle.max - newVolumeHandle.min)) * 65535);
+                                    host.send_roon_message({
+                                        type:   'Volume',
+                                        id:     z.zone_id,
+                                        volume: newVolume
+                                    });
+                                }
+                            } else if (volumeHandle.value != newVolumeHandle.value) {
                                 logger.info('CHANGING VOLUME');
                                 const newVolume = Math.ceil(((newVolumeHandle.value - newVolumeHandle.min) / (newVolumeHandle.max - newVolumeHandle.min)) * 65535);
                                 host.send_roon_message({
@@ -439,9 +454,11 @@ function spotify_tells_us_to_set_volume({zone_id, volume}) {
     let zone = zones[zone_id];
     if (zone && zone.outputs.length == 1 && zone.outputs[0].volume && zone.outputs[0].volume.step) {
         const volumeHandle = zone.outputs[0].volume;
-        global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
-                                                     'absolute',
-                                                     Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
+        if (!volumeHandle.is_muted) {
+            global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
+                                                         'absolute',
+                                                         Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
+        }
     } else {
         logger.info("VOLUME SETTING NOT SUPPORTED ON GROUPED ZONES");
     }
