@@ -52,7 +52,8 @@ async function handle_core_paired(core) {
                 Seek:      spotify_tells_us_to_seek,
                 Preload:   spotify_tells_us_to_preload,
                 Clear:     spotify_tells_us_to_clear,
-                VolumeSet: spotify_tells_us_to_set_volume
+                VolumeSet: spotify_tells_us_to_set_volume,
+                Stop:      spotify_tells_us_to_stop,
             }
         });
     }
@@ -335,10 +336,18 @@ async function spotify_tells_us_to_play({
                 id:          zone_id,
             });
         } else if (event == "EndedNaturally") {
-            host.send_roon_message({
-                type:        'Stopped',
-                id:          zone_id,
-            });
+            if (slots.queue) {
+                host.send_roon_message({
+                    type: 'OnToNext',
+                    id:   zone_id,
+                });
+                slots.queue = null;
+            } else {
+                host.send_roon_message({
+                    type:        'Stopped',
+                    id:          zone_id,
+                });
+            }
         } else if (event == "MediaError") {
             host.send_roon_message({
                 type:        'Stopped',
@@ -440,7 +449,7 @@ function spotify_tells_us_to_unpause({ zone_id }) {
     logger.info({msg: 'Got unpause from spotify', zone_id});
     global_core.services.RoonApiTransport.control(zone_id, "play");
 }
-function spotify_tells_us_to_stop() {
+function spotify_tells_us_to_stop({ zone_id }) {
     logger.info({msg: 'Got stop from spotify', zone_id});
     global_core.services.RoonApiTransport.control(zone_id, "stop");
 }

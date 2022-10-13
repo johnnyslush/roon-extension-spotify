@@ -151,8 +151,7 @@ impl PlayerInternal {
             });
             self.playing_to_paused();
         } else {
-            error!("Got roon paused message while not in playing or paused state");
-            exit(1);
+            warn!("Got roon paused message while not in playing or paused state");
         }
     }
 
