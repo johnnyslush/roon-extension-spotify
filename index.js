@@ -441,7 +441,7 @@ function spotify_tells_us_to_set_volume({zone_id, volume}) {
         const volumeHandle = zone.outputs[0].volume;
         global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
                                                      'absolute',
-                                                     volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol);
+                                                     Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
     } else {
         logger.info("VOLUME SETTING NOT SUPPORTED ON GROUPED ZONES");
     }
