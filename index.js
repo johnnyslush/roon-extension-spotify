@@ -279,7 +279,9 @@ function getNowPlaying(now_playing_info) {
 
 let slots = {
     play: null,
-    queue: null
+    queue: null,
+
+    got_onto_next: false
 }
 
 async function spotify_tells_us_to_play({
@@ -287,6 +289,18 @@ async function spotify_tells_us_to_play({
     now_playing_info,
     position_ms
 }) {
+
+    // Let roon handle transition since queued up and roon confirmed its moving queue into play slot
+    // XXX Need to handle this in the queue callbacks too
+    // XXX let got_onto_next = false;
+    // XXX if (slots.queue && slots.queue.track_id === now_playing_info.track_id) {
+    // XXX     if (got_onto_next) {
+    // XXX         logger.info({msg: 'Letting roon start playback of next track'})
+    // XXX         return;
+    // XXX     } else {
+    // XXX         logger.info({msg: 'Track was queued but roon failed to start playback at all or in time, starting playback manually'})
+    // XXX     }
+    // XXX }
     
     logger.info('spotify told us to play ' + zone_id);
     const session_id = await getOrCreateSession(zone_id);
@@ -309,6 +323,7 @@ async function spotify_tells_us_to_play({
         const event = msg.name;
 
         if (event == "OnToNext") {
+            //got_onto_next = true;
             host.send_roon_message({
                 type: 'OnToNext',
                 id:   zone_id,
@@ -378,10 +393,20 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
     }
     logger.info(play_body);
 
+    slots.queue = play_body;
     global_core.services.RoonApiAudioInput.play(play_body,
         (msg, body) => {
         logger.info({starting_slot: 'QUEUE', message: msg, body})
         if (!msg) return;
+        
+        if (slots.queue == null) {
+            logger.info({msg: 'Queue slot was set to null, ignoring callbacks', previous: play_body, current: slots.queue})
+            return;
+        } else if (slots.queue.track_id !== play_body.track_id) {
+            logger.info({msg: 'Another track was queued, ignoring callbacks', previous: play_body, current: slots.queue})
+            return;
+        }
+
         const event = msg.name;
         if (event == "OnToNext") {
             host.send_roon_message({
@@ -428,8 +453,6 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
             });
         }
     })
-
-    slots.queue = play_body;
 }
 
 async function spotify_tells_us_to_clear({ zone_id, slots }) {
@@ -463,11 +486,12 @@ function spotify_tells_us_to_set_volume({zone_id, volume}) {
     let zone = zones[zone_id];
     if (zone && zone.outputs.length == 1 && zone.outputs[0].volume && zone.outputs[0].volume.step) {
         const volumeHandle = zone.outputs[0].volume;
-        if (!volumeHandle.is_muted) {
-            global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
-                                                         'absolute',
-                                                         Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
+        if (volumeHandle.is_muted) {
+            global_core.services.RoonApiTransport.mute(zone.outputs[0],'unmute');
         }
+        global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
+            'absolute',
+            Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
     } else {
         logger.info("VOLUME SETTING NOT SUPPORTED ON GROUPED ZONES");
     }
