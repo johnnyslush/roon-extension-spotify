@@ -189,19 +189,6 @@ impl PlayerInternal {
         position_ms: u32,
     ) {
 
-        if let PlayerState::Playing {
-            ref mut track,
-            ..
-        } | PlayerState::Paused {
-            ref mut track,
-            ..
-        } = self.state {
-            if track_id == track.audio.id {
-                warn!("Already got this song..do nothing?");
-                return;
-            }
-        }
-
         //Check if the requested track has been preloaded already. If so use the preloaded data.
         if let PlayerPreload::Ready {
             track_id: loaded_track_id,
