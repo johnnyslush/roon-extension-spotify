@@ -9,7 +9,7 @@ const path              = require('path');
 const { Host }          = require('./node-librespot/index.js');
 
 /////////
-const log_dir = process.argv[0].endsWith('node') ? process.cwd() : path.join(process.execPath, '..');
+const log_dir = /node(.exe)?$/.test(process.argv[0]) ? process.cwd() : path.join(process.execPath, '..');
 const transport = pino.transport({
     targets: [
         { target: 'pino-pretty' },
@@ -18,17 +18,19 @@ const transport = pino.transport({
 });
 const logger = pino(transport);
 const os     = require('os');
-const nets   = os.networkInterfaces();
 
 // Default to localhost, use local network ip if found
-let librespot_http_url = '127.0.0.1';
-const results = Object.create(null);
-for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-        if (net.family === 'IPv4' && !net.internal) {
-            librespot_http_url = net.address;
+const get_ip = () => {
+    let librespot_http_url = '127.0.0.1';
+    const nets   = os.networkInterfaces();
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            if (net.family === 'IPv4' && !net.internal) {
+                librespot_http_url = net.address;
+            }
         }
     }
+    return librespot_http_url
 }
 
 let sessions = {};
@@ -37,10 +39,12 @@ let zones    = {};
 let global_core;
 let host;
 let librespot_http_port;
+let librespot_http_url;
 
 async function handle_core_paired(core) {
     if (!host) {
         // Create new host
+        librespot_http_url = get_ip();
         host = new Host({
             log_dir,
             base_url: librespot_http_url === "127.0.0.1" ? librespot_http_url : "0.0.0.0", // Host to listen on locally
@@ -94,7 +98,18 @@ async function handle_core_paired(core) {
             }
             if (msg.zones_changed) {
                 msg.zones_changed.forEach(z => {
+
+
+
                     let oldz = zones[z.zone_id];
+                    if (oldz.display_name !== z.display_name) {
+                        logger.info("Sending rename message from javascript");
+                        host.send_roon_message({
+                            type:   'RenameZone',
+                            id:     z.zone_id,
+                            name:   z.display_name
+                        });
+                    }
                     // Zone has volume
                     if (oldz && oldz.outputs.length == 1 && oldz.outputs[0].volume && oldz.outputs[0].volume.step) {
                         const volumeHandle = oldz.outputs[0].volume;

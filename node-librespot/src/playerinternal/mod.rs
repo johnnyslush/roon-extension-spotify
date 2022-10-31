@@ -275,7 +275,6 @@ impl Future for PlayerInternal {
                     Poll::Ready(Ok(loaded_track)) => {
                         if start_playback {
                             let zone_id = self.zone_id.clone();
-                            info!(">>>>>>> LOAD FINISHED, TELLING ROON TO PLAY");
                             self.yet_to_play = false;
                             self.send_to_roon(SpotifyJSEvent::Play {
                                 zone_id,
@@ -296,7 +295,6 @@ impl Future for PlayerInternal {
                                 suggested_to_preload_next_track: false,
                             };
                         } else {
-                            info!(">>>>>>> LOAD FINISHED, BUT START PLAYBACK WAS FALSE, SO JUST TELL SPOTIFY TO PAUSE");
                             self.send_event(PlayerEvent::Paused {
                                 track_id,
                                 play_request_id,
@@ -327,7 +325,6 @@ impl Future for PlayerInternal {
                 match loader.as_mut().poll(cx) {
                     Poll::Ready(Ok(loaded_track)) => {
                         // Preloaded track ready, tell roon to start preloading
-                        info!(">>>>>>>>>>>>>>>>> SENDING PRELOAD TO ROON");
                         let zone_id = self.zone_id.clone();
                         self.send_to_roon(SpotifyJSEvent::Preload {
                             zone_id,
@@ -396,10 +393,12 @@ impl Future for PlayerInternal {
 
 impl PlayerInternal {
     fn send_to_roon(&self, evt: SpotifyJSEvent) {
+        info!("Sending message to Roon {:?}", evt);
         self.js_tx.lock().unwrap().send(evt).unwrap();
     }
 
     fn send_event(&mut self, event: PlayerEvent) {
+        info!("Sending PlayerEvent {:?}", event);
         self.event_senders
             .retain(|sender| sender.send(event.clone()).is_ok());
     }

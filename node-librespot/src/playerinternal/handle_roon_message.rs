@@ -6,6 +6,7 @@ use super::*;
 impl PlayerInternal {
 
     pub fn handle_roon_command(&mut self, msg: RoonMessage) {
+        info!("Got Roon message {:?}", msg.clone());
         match msg {
             RoonMessage::Playing {..}        => self.handle_roon_playing(),
             RoonMessage::Paused  {..}        => self.handle_roon_paused(),
@@ -18,6 +19,7 @@ impl PlayerInternal {
             RoonMessage::EndedNaturally {..} => self.handle_roon_ended_naturally(),
             RoonMessage::OnToNext {..}       => self.handle_roon_on_to_next(),
             RoonMessage::Volume {..}         => self.handle_roon_volume(msg),
+            RoonMessage::RenameZone {..}     => self.handle_roon_rename_zone(msg),
             RoonMessage::Error {..}          => (),
             _ => ()
         }
@@ -78,7 +80,6 @@ impl PlayerInternal {
 
 
     fn handle_roon_playing(&mut self) {
-        info!(">>>> GOT ROON PLAYING MESSAGE");
         // Already playing, no state change just tell spotify
         if let PlayerState::Playing {
             track_id,
@@ -116,7 +117,6 @@ impl PlayerInternal {
     }
 
     fn handle_roon_paused(&mut self) {
-        info!(">>>> GOT ROON PAUSED MESSAGE");
         // Pause called from spotify somewhere
         // Extension told roon to pause
         // Roon confirmed pause
@@ -157,7 +157,6 @@ impl PlayerInternal {
 
     fn handle_roon_unpaused(&mut self) {
         // Unpaused from spotify, roon confirmed, relay to spotify that it occurred
-        info!(">>>> GOT ROON UNPAUSED MESSAGE");
         if let PlayerState::Playing {
             track_id,
             play_request_id,
@@ -196,7 +195,6 @@ impl PlayerInternal {
     fn handle_roon_time(&mut self, msg: RoonMessage) {
         // We are already playing, roon is just telling us where we
         // are at in the track. Update our state and relay to spotify
-        info!(">>>> GOT ROON TIME MESSAGE");
 
         if let RoonMessage::Time { seek_position_ms, track_id, .. } = msg {
             
@@ -243,7 +241,6 @@ impl PlayerInternal {
     }
 
     fn handle_roon_stopped(&mut self) {
-        info!(">>>>>>>>>>>> GOT ROON STOPPED");
         if let PlayerState::Playing {
             track_id,
             play_request_id,
@@ -262,7 +259,6 @@ impl PlayerInternal {
     }
 
     fn handle_roon_ended_naturally(&mut self) {
-        info!(">>>>>>>>>>>> GOT ROON ENDED NATURALLY");
         if let PlayerState::Playing {
             track_id,
             play_request_id,
@@ -281,7 +277,6 @@ impl PlayerInternal {
 
     fn handle_roon_on_to_next(&mut self) {
         // Need to send EndOfTrack to spirc, and it will turn around and call a load_track
-        info!(">>>>>>>>>>>> GOT ROON ON TO NEXT");
         if let PlayerState::Playing {
             track_id,
             play_request_id,
@@ -297,7 +292,6 @@ impl PlayerInternal {
     }
 
     fn handle_roon_next_track(&mut self) {
-        info!(">>>>>>>>>>> GOT ROON NEXT TRACK");
         if let PlayerState::Playing {
             track_id,
             play_request_id,
@@ -318,7 +312,6 @@ impl PlayerInternal {
         }
     }
     fn handle_roon_previous_track(&mut self) {
-        info!(">>>>>>>>>>> GOT ROON PREVIOUS TRACK");
         if let PlayerState::Playing {
             play_request_id,
             ..
@@ -336,7 +329,6 @@ impl PlayerInternal {
         }
     }
     fn handle_roon_volume(&mut self, msg: RoonMessage) {
-        info!(">>>>>>>>>>> GOT ROON CHANGE VOLUME");
         let volume = match msg {
             RoonMessage::Volume { volume, .. } => volume,
             _ => {
@@ -347,5 +339,20 @@ impl PlayerInternal {
         self.send_event(PlayerEvent::VolumeSet {
             volume
         })
+    }
+    fn handle_roon_rename_zone(&mut self, msg: RoonMessage) {
+        return;
+        /* Viable to send from here, but better to send from spirc, so pass through for now
+        let name = match msg {
+            RoonMessage::RenameZone { name, .. } => name,
+            _ => {
+                error!("Got something other than name in roon rename handler");
+                exit(1);
+            }
+        };
+        self.send_event(PlayerEvent::RenameDevice {
+            name
+        })
+        */
     }
 }

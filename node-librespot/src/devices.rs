@@ -67,6 +67,7 @@ pub async fn run<F: Fn(SpotifyJSEvent)>(
                                     zones.remove(&id);
                                 }
                             },
+                            RoonMessage::RenameZone          { id, .. } |
                             RoonMessage::Playing             { id, .. } |
                             RoonMessage::Paused              { id, .. } |
                             RoonMessage::Unpaused            { id, .. } |

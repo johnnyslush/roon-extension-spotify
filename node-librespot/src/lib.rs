@@ -270,7 +270,7 @@ impl Host {
      match env::current_exe() {
          Ok(exe_path) => { 
              let log_dir;
-             if exe_path.ends_with("node") {
+             if exe_path.ends_with("node") || exe_path.ends_with("node.exe") {
                  log_dir = Path::new("./").join("roon-extension-spotify.log");
              } else {
                  log_dir = Path::new(&exe_path).parent().unwrap().join("roon-extension-spotify.log");

@@ -111,6 +111,10 @@ pub enum RoonMessage {
     DisableZone {
         id: String
     },
+    RenameZone {
+        id:   String,
+        name: String
+    },
     Playing             { id: String },
     Paused              { id: String },
     Unpaused            { id: String },
@@ -197,6 +201,12 @@ impl Zone {
                                     info!("Shutting down zone {}", name.clone());
                                     break
                                 },
+                                RoonMessage::RenameZone { name: rename_to, .. } => {
+                                    info!("Renaming zone from {} to {}", name.clone(), rename_to.clone());
+                                    if let Some(spirc) = spirc.take() {
+                                        spirc.rename(rename_to);
+                                    }
+                                },
                                 _ => ()
                             },
                             _ => break
@@ -249,6 +259,7 @@ impl Zone {
                                 js_callback_tx.clone(),
                                 id.clone()
                             );
+                            info!("CREATED NEW SPIRC FOR ZONE {}", name.clone());
                             let (spirc_, spirc_task_) = Spirc::new(connect_config.clone(), session, player, mixer);
                             spirc      = Some(spirc_);
                             spirc_task = Some(Box::pin(spirc_task_));

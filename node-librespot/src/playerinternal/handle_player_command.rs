@@ -2,6 +2,7 @@ use super::*;
 
 impl PlayerInternal {
     pub fn handle_player_command(&mut self, cmd: PlayerCommand) {
+        info!("Got player command from spirc {:?}", cmd);
         match cmd {
             PlayerCommand::Load {
                 track_id,
@@ -24,7 +25,6 @@ impl PlayerInternal {
     }
 
     fn handle_play(&mut self) {
-        info!(">>>> SPIRC CALLED PLAY");
        // We were in paused state, and spotify told us to play
        // Update state and let roon know what to do
        if let PlayerState::Paused {
@@ -84,7 +84,6 @@ impl PlayerInternal {
     }
 
     fn handle_pause(&mut self) {
-        info!(">>>> SPIRC CALLED PAUSE");
        // We were playing a song and pause was called from spotify
        // Tell roon and set our state to paused
        if let PlayerState::Playing {
@@ -121,7 +120,6 @@ impl PlayerInternal {
 
     // Spotify told us that the user disconnected, let roon know and update our state;
     fn handle_stop(&mut self) {
-        info!(">>>> SPIRC CALLED STOP");
         match self.state {
             PlayerState::Invalid => {
                 error!("Called handle_stop from player state Invalid");
@@ -140,7 +138,6 @@ impl PlayerInternal {
     // Spotify told us to start loading the next track ahead of time (although we decide when to 
     // message them, which then loops back here)
     fn handle_preload(&mut self, track_id: SpotifyId) {
-        info!(">>>> SPIRC CALLED PRELOAD");
         let mut preload_track = true;
         // check whether the track is already loaded somewhere or being loaded.
         if let PlayerPreload::Loading {
@@ -191,7 +188,6 @@ impl PlayerInternal {
         play: bool,
         position_ms: u32,
     ) {
-        info!(">>>> SPIRC CALLED LOAD");
 
         if let PlayerState::Playing {
             ref mut track,
@@ -299,7 +295,6 @@ impl PlayerInternal {
 
     // Spotify told us to seek, let roon know
     fn handle_seek(&mut self, position_ms: u32) {
-        info!(">>>> SPIRC CALLED SEEK");
        if let PlayerState::Playing {
            ..
        } | PlayerState::Paused {
@@ -316,7 +311,6 @@ impl PlayerInternal {
     }
 
     fn handle_volume_set(&mut self, volume: u16) {
-       info!(">>>>>>>> SPIRC TOLD US TO SET VOLUME");
        if let PlayerState::Playing {
            ..
        } | PlayerState::Paused {
