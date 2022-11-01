@@ -3,6 +3,7 @@ use sha1::{Digest, Sha1};
 use tokio::sync::mpsc::{UnboundedSender};
 
 use librespot::core::config::{ConnectConfig, DeviceType, SessionConfig};
+use librespot::discovery::{Discovery};
 use librespot::playback::config::{PlayerConfig};
 use librespot::connect::spirc::Spirc;
 use librespot::core::session::Session;
@@ -140,6 +141,20 @@ fn device_id(name: &str) -> String {
     hex::encode(Sha1::digest(name.as_bytes()))
 }
 
+fn start_discovery(name: String, device_id: String) -> Option<Discovery> {
+    match librespot::discovery::Discovery::builder(device_id.clone())
+        .name(name.clone())
+        .device_type(librespot::discovery::DeviceType::Computer)
+        .launch()
+        {
+            Ok(d) => return Some(d),
+            Err(err) => {
+                warn!("Could not initialize disovery: {}.", err);
+                return None;
+            }
+        }
+}
+
 pub struct Zone {
     commands:       UnboundedSender<RoonMessage>,
     server_player_tx: UnboundedSender<ServerMessage>,
@@ -174,7 +189,7 @@ impl Zone {
                 proxy:     None,
                 ap_port:   None
             };
-            let connect_config = ConnectConfig {
+            let mut connect_config = ConnectConfig {
                 name:            name.clone(),
                 device_type:     DeviceType::default(),
                 initial_volume:  Some(50),
@@ -182,14 +197,8 @@ impl Zone {
                 autoplay:        false,
             };
             info!("Starting discovery: {},{}",connect_config.name.clone(),session_config.device_id.clone());
-            match librespot::discovery::Discovery::builder(session_config.device_id.clone())
-                .name(name.clone())
-                .device_type(librespot::discovery::DeviceType::Computer)
-                .launch()
-            {
-                Ok(d) => discovery = Some(d),
-                Err(err) => warn!("Could not initialize disovery: {}.", err),
-            }
+
+            discovery = start_discovery(name.clone(), session_config.device_id.clone());
 
             // Port from librespot main.rs
             loop {
@@ -203,6 +212,14 @@ impl Zone {
                                 },
                                 RoonMessage::RenameZone { name: rename_to, .. } => {
                                     info!("Renaming zone from {} to {}", name.clone(), rename_to.clone());
+                                    connect_config = ConnectConfig {
+                                        name:            rename_to.clone(),
+                                        device_type:     DeviceType::default(),
+                                        initial_volume:  Some(50),
+                                        has_volume_ctrl: true,
+                                        autoplay:        false,
+                                    };
+                                    discovery = start_discovery(rename_to.clone(), session_config.device_id.clone());
                                     if let Some(spirc) = spirc.take() {
                                         spirc.rename(rename_to);
                                     }

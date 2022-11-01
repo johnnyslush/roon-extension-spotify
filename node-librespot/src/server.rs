@@ -125,8 +125,8 @@ async fn stream(
     data: web::Data<Mutex<ServerInternal>>
 ) -> HttpResponse {
     let (zone_id,req_track_id) = path.into_inner();
-    let headers = req.headers();
-        let start = SystemTime::now();
+    let _headers = req.headers();
+        let _start = SystemTime::now();
     info!("HTTP REQ ZONE: {}", zone_id);
     info!("     REQ TRACK: {}", req_track_id);
     // XXX Roon doesnt use the range-end portion 

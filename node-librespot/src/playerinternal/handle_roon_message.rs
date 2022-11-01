@@ -340,7 +340,7 @@ impl PlayerInternal {
             volume
         })
     }
-    fn handle_roon_rename_zone(&mut self, msg: RoonMessage) {
+    fn handle_roon_rename_zone(&mut self, _msg: RoonMessage) {
         return;
         /* Viable to send from here, but better to send from spirc, so pass through for now
         let name = match msg {

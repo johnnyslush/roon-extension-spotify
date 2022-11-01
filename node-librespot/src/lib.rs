@@ -276,7 +276,13 @@ impl Host {
                  log_dir = Path::new(&exe_path).parent().unwrap().join("roon-extension-spotify.log");
                  println!("{}",log_dir.display());
              }
-             File::create(log_dir.clone());
+             match File::create(log_dir.clone()) {
+                 Err(err) => {
+                     error!("Could not create log file {}", err);
+                     exit(1);
+                 },
+                 _ => ()
+             };
              // Set up logging
              CombinedLogger::init(
                  vec![
@@ -286,7 +292,7 @@ impl Host {
              ).unwrap();
          },
          Err(e) => {
-             error!("Could not find log path");
+             error!("Could not find log path {}", e);
              exit(1);
         },
      };
