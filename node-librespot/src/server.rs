@@ -48,14 +48,20 @@ impl Stream for SpotifyStreamer {
         let (responder, receiver) = channel::<ServerReply>();
 
         // Ask devices to give you chunk of data
-        self.devices_tx.send(ServerMessage::TrackRead {
+        match self.devices_tx.send(ServerMessage::TrackRead {
             zone_id:   self.zone_id.clone(),
             track_id:  self.track_id.clone(),
             start:     self.readpos, 
             end:       self.readpos + 32768, // XXX
             out:       buff.clone(),
             responder
-        }).unwrap();
+        }) {
+            Err(e) => {
+                error!("Error requesting chunk of data from devices thread {}", e);
+                return Poll::Ready(Some(Err(actix_web::error::ErrorInternalServerError("Devices thread shut down while streaming"))));
+            },
+            _ => ()
+        };
         match receiver.recv()
         {
             Ok(msg) => match msg {
