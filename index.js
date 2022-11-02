@@ -33,8 +33,9 @@ const get_ip = () => {
     return librespot_http_url
 }
 
-let sessions = {};
-let zones    = {};
+let sessions  = {};
+let zones     = {};
+let zoneSlots = {};
 
 let global_core;
 let host;
@@ -159,9 +160,9 @@ async function handle_core_unpaired(core) {
     logger.info('stopping host and deleting');
     await host.stop();
     logger.info('succesfully stopped host');
-    sessions = {};
-    zones    = {};
-    slots    = { play: null, queue: null };
+    sessions  = {};
+    zones     = {};
+    zoneSlots = {};
 }
 
 const roon = new RoonApi({
@@ -174,7 +175,6 @@ const roon = new RoonApi({
     force_server:  true,
     core_paired:   handle_core_paired,
     core_unpaired: handle_core_unpaired,
-
 })
 
 const svc_status = new RoonApiStatus(roon);
@@ -292,11 +292,8 @@ function getNowPlaying(now_playing_info) {
 }
 
 
-let slots = {
-    play: null,
-    queue: null,
-
-    got_onto_next: false
+const getSlots = zone_id => {
+    return zoneSlots[zone_id] = zoneSlots[zone_id] || { play: null, queue: null };
 }
 
 async function spotify_tells_us_to_play({
@@ -305,18 +302,15 @@ async function spotify_tells_us_to_play({
     position_ms
 }) {
 
-    // Let roon handle transition since queued up and roon confirmed its moving queue into play slot
-    // XXX Need to handle this in the queue callbacks too
-    // XXX let got_onto_next = false;
-    // XXX if (slots.queue && slots.queue.track_id === now_playing_info.track_id) {
-    // XXX     if (got_onto_next) {
-    // XXX         logger.info({msg: 'Letting roon start playback of next track'})
-    // XXX         return;
-    // XXX     } else {
-    // XXX         logger.info({msg: 'Track was queued but roon failed to start playback at all or in time, starting playback manually'})
-    // XXX     }
-    // XXX }
-    
+    const slots = getSlots(zone_id);
+
+    if (slots.queue?.playing && slots.queue?.track_id === now_playing_info.track_id) {
+        logger.info('Queue slot started playing succesfully, ignoring and clearing queue slot');
+        slots.play  = slots.queue;
+        slots.queue = null;
+        return;
+    }
+
     logger.info('spotify told us to play ' + zone_id);
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
@@ -371,29 +365,34 @@ async function spotify_tells_us_to_play({
                     type: 'OnToNext',
                     id:   zone_id,
                 });
-                slots.queue = null;
+                zoneSlots[zone_id] = null;
             } else {
                 host.send_roon_message({
                     type:        'Stopped',
                     id:          zone_id,
                 });
+                zoneSlots[zone_id] = null;
             }
         } else if (event == "MediaError") {
             host.send_roon_message({
                 type:        'Stopped',
                 id:          zone_id,
             });
+            zoneSlots[zone_id] = null;
         } else if (event == "StoppedUser") {
             host.send_roon_message({
                 type:        'Stopped',
                 id:          zone_id,
             });
+            zoneSlots[zone_id] = null;
         }
     })
     
     slots.play = play_body;
 }
 async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
+    const slots = getSlots(zone_id);
+
     logger.info('spotify told us to preload ' + zone_id);
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
@@ -414,14 +413,6 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
         logger.info({starting_slot: 'QUEUE', message: msg, body})
         if (!msg) return;
         
-        if (slots.queue == null) {
-            logger.info({msg: 'Queue slot was set to null, ignoring callbacks', previous: play_body, current: slots.queue})
-            return;
-        } else if (slots.queue.track_id !== play_body.track_id) {
-            logger.info({msg: 'Another track was queued, ignoring callbacks', previous: play_body, current: slots.queue})
-            return;
-        }
-
         const event = msg.name;
         if (event == "OnToNext") {
             host.send_roon_message({
@@ -436,10 +427,12 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
                 track_id:         now_playing_info.track_id
             });
         } else if (event == "Playing") {
+            if (slots.queue?.track_id === play_body.track_id) {
+                slots.queue.playing = true;
+            }
             host.send_roon_message({
                 type:        'Playing',
                 id:          zone_id,
-                //track_id ?
             });
         } else if (event == "Paused") {
             host.send_roon_message({
@@ -452,20 +445,31 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
                 id:          zone_id,
             });
         } else if (event == "EndedNaturally") {
-            host.send_roon_message({
-                type:        'Stopped',
-                id:          zone_id,
-            });
+            if (slots.queue) {
+                host.send_roon_message({
+                    type: 'OnToNext',
+                    id:   zone_id,
+                });
+                zoneSlots[zone_id] = null;
+            } else {
+                host.send_roon_message({
+                    type:        'Stopped',
+                    id:          zone_id,
+                });
+                zoneSlots[zone_id] = null;
+            }
         } else if (event == "MediaError") {
             host.send_roon_message({
                 type:        'Stopped',
                 id:          zone_id,
             });
+            zoneSlots[zone_id] = null;
         } else if (event == "StoppedUser") {
             host.send_roon_message({
                 type:        'Stopped',
                 id:          zone_id,
             });
+            zoneSlots[zone_id] = null;
         }
     })
 }
