@@ -74,9 +74,26 @@ impl PlayerInternal {
                 };
             }
        } else if let PlayerState::Loading {
+           track_id,
+           play_request_id,
+           prev_track_id,
            ..
        } = self.state {
-           warn!("Called handle_play while in loading state, ignoring");
+           info!("Called handle_play while in loading state, setting start_playback = true");
+            let loader = match mem::replace(&mut self.state, PlayerState::Invalid) {
+                PlayerState::Loading { loader, .. } => loader,
+                _ => {
+                    error!("Not in loading state!");
+                    exit(1);
+                }
+            };
+           self.state = PlayerState::Loading {
+               start_playback: true,
+               track_id,
+               play_request_id,
+               loader,
+               prev_track_id
+           };
        } else {
            error!("Called handle_play while not in paused state");
            exit(1);
