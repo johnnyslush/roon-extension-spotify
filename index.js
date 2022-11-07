@@ -296,6 +296,84 @@ const getSlots = zone_id => {
     return zoneSlots[zone_id] = zoneSlots[zone_id] || { play: null, queue: null };
 }
 
+let id = 0;
+const inc = () => {
+    return id++;
+}
+
+
+
+const handle_play_slot_event = (event, body, slots, zone_id) => {
+    if (event == "OnToNext") {
+        host.send_roon_message({
+            type: 'OnToNext',
+            id:   zone_id,
+        });
+    } else if (event == "Time") {
+        host.send_roon_message({
+            type:        'Time',
+            id:          zone_id,
+            seek_position_ms: body.seek_position_ms || 0,
+            track_id:         slots.play.track_id
+        });
+    } else if (event == "Playing") {
+        host.send_roon_message({
+            type:        'Playing',
+            id:          zone_id,
+        });
+    } else if (event == "Paused") {
+        host.send_roon_message({
+            type:        'Paused',
+            id:          zone_id,
+        });
+    } else if (event == "Unpaused") {
+        host.send_roon_message({
+            type:        'Unpaused',
+            id:          zone_id,
+        });
+    } else if (event == "EndedNaturally") {
+        if (slots.queue) {
+            host.send_roon_message({
+                type: 'OnToNext',
+                id:   zone_id,
+            });
+            zoneSlots[zone_id] = null;
+        } else {
+            host.send_roon_message({
+                type:        'Stopped',
+                id:          zone_id,
+            });
+            zoneSlots[zone_id] = null;
+        }
+    } else if (event == "MediaError") {
+        host.send_roon_message({
+            type:        'Stopped',
+            id:          zone_id,
+        });
+        zoneSlots[zone_id] = null;
+    } else if (event == "StoppedUser") {
+        host.send_roon_message({
+            type:        'Stopped',
+            id:          zone_id,
+        });
+        zoneSlots[zone_id] = null;
+    }
+}
+
+const handle_queue_slot_event = (event, body, slots, zone_id) => {
+    if (event == 'Playing') {
+        slots.queue.playing = true;
+        host.send_roon_message({
+            type:        'Playing',
+            id:          zone_id,
+        });
+    } else {
+        console.log('UNHANDLED QUEUE SLOT EVENT', 'id:', slots.queue.id, event);
+    }
+}
+
+
+
 async function spotify_tells_us_to_play({
     zone_id,
     now_playing_info,
@@ -304,6 +382,7 @@ async function spotify_tells_us_to_play({
 
     const slots = getSlots(zone_id);
 
+    // XXX Can we make use of spotify play_request_id?
     if (slots.queue?.playing && slots.queue?.track_id === now_playing_info.track_id) {
         logger.info('Queue slot started playing succesfully, ignoring and clearing queue slot');
         slots.play  = slots.queue;
@@ -315,6 +394,8 @@ async function spotify_tells_us_to_play({
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
 
+    let _slot_id = inc();
+
     const play_body = {
         session_id,
         track_id: now_playing_info.track_id,
@@ -324,71 +405,21 @@ async function spotify_tells_us_to_play({
         seek_position_ms: position_ms,
         info
     };
-    logger.info(play_body);
+
+    slots.play = { ...play_body, id: _slot_id };
 
     global_core.services.RoonApiAudioInput.play(play_body, (msg, body) => {
-        logger.info({starting_slot: 'PLAY', message:msg, body, play_body})
         if (!msg) return;
         const event = msg.name;
 
-        if (event == "OnToNext") {
-            //got_onto_next = true;
-            host.send_roon_message({
-                type: 'OnToNext',
-                id:   zone_id,
-            });
-        } else if (event == "Time") {
-            host.send_roon_message({
-                type:        'Time',
-                id:          zone_id,
-                seek_position_ms: body.seek_position_ms || 0,
-                track_id:         now_playing_info.track_id
-            });
-        } else if (event == "Playing") {
-            host.send_roon_message({
-                type:        'Playing',
-                id:          zone_id,
-            });
-        } else if (event == "Paused") {
-            host.send_roon_message({
-                type:        'Paused',
-                id:          zone_id,
-            });
-        } else if (event == "Unpaused") {
-            host.send_roon_message({
-                type:        'Unpaused',
-                id:          zone_id,
-            });
-        } else if (event == "EndedNaturally") {
-            if (slots.queue) {
-                host.send_roon_message({
-                    type: 'OnToNext',
-                    id:   zone_id,
-                });
-                zoneSlots[zone_id] = null;
-            } else {
-                host.send_roon_message({
-                    type:        'Stopped',
-                    id:          zone_id,
-                });
-                zoneSlots[zone_id] = null;
-            }
-        } else if (event == "MediaError") {
-            host.send_roon_message({
-                type:        'Stopped',
-                id:          zone_id,
-            });
-            zoneSlots[zone_id] = null;
-        } else if (event == "StoppedUser") {
-            host.send_roon_message({
-                type:        'Stopped',
-                id:          zone_id,
-            });
-            zoneSlots[zone_id] = null;
-        }
+        console.log(`${_slot_id}:PLAYSLOT`, now_playing_info.track_id, msg)
+
+        // We have moved on from this track -- disregard
+        if (slots.play?.id !== _slot_id) return;
+
+        handle_play_slot_event(event, body, slots, zone_id);
     })
     
-    slots.play = play_body;
 }
 async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
     const slots = getSlots(zone_id);
@@ -405,72 +436,32 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
         seek_position_ms: 0,
         info
     }
-    logger.info(play_body);
 
-    slots.queue = play_body;
+    let _slot_id = inc();
+
+    slots.queue = { ...play_body, id: _slot_id };
     global_core.services.RoonApiAudioInput.play(play_body,
         (msg, body) => {
-        logger.info({starting_slot: 'QUEUE', message: msg, body, play_body})
-        if (!msg) return;
-        
+        if (!msg) {
+            console.log(`${_slot_id}:QUEUE EMPTY MSG`, now_playing_info.track_id, msg)
+            return;
+        };
+
+        console.log(`${_slot_id}:QUEUE`, now_playing_info.track_id, msg)
+
         const event = msg.name;
-        if (event == "OnToNext") {
-            host.send_roon_message({
-                type: 'OnToNext',
-                id:   zone_id,
-            });
-        } else if (event == "Time") {
-            host.send_roon_message({
-                type:             'Time',
-                id:               zone_id,
-                seek_position_ms: body.seek_position_ms || 0,
-                track_id:         now_playing_info.track_id
-            });
-        } else if (event == "Playing") {
-            if (slots.queue?.track_id === play_body.track_id) {
-                slots.queue.playing = true;
-            }
-            host.send_roon_message({
-                type:        'Playing',
-                id:          zone_id,
-            });
-        } else if (event == "Paused") {
-            host.send_roon_message({
-                type:        'Paused',
-                id:          zone_id,
-            });
-        } else if (event == "Unpaused") {
-            host.send_roon_message({
-                type:        'Unpaused',
-                id:          zone_id,
-            });
-        } else if (event == "EndedNaturally") {
-            if (slots.queue) {
-                host.send_roon_message({
-                    type: 'OnToNext',
-                    id:   zone_id,
-                });
-                zoneSlots[zone_id] = null;
-            } else {
-                host.send_roon_message({
-                    type:        'Stopped',
-                    id:          zone_id,
-                });
-                zoneSlots[zone_id] = null;
-            }
-        } else if (event == "MediaError") {
-            host.send_roon_message({
-                type:        'Stopped',
-                id:          zone_id,
-            });
-            zoneSlots[zone_id] = null;
-        } else if (event == "StoppedUser") {
-            host.send_roon_message({
-                type:        'Stopped',
-                id:          zone_id,
-            });
-            zoneSlots[zone_id] = null;
+
+        // Still in queue slot
+        if (_slot_id === slots.queue?.id) {
+            handle_queue_slot_event(event, body, slots, zone_id);
+        // In play slot
+        } else if (_slot_id === slots.play?.id) {
+            handle_play_slot_event(event, body, slots, zone_id);
+        } else {
+            // Dont care
         }
+
+
     })
 }
 

@@ -111,8 +111,7 @@ impl PlayerInternal {
             });
             self.paused_to_playing();
         } else {
-            error!("Got roon playing message while not in paused or playing state");
-            exit(1);
+            warn!("Got roon playing message while not in paused or playing state");
         }
     }
 
@@ -187,8 +186,7 @@ impl PlayerInternal {
             });
             self.paused_to_playing();
         } else {
-            error!("Got roon unpause message from state other than playing or paused");
-            exit(1);
+            warn!("Got roon unpause message from state other than playing or paused");
         }
     }
 
@@ -307,8 +305,7 @@ impl PlayerInternal {
                 play_request_id,
             })
         } else {
-            error!("Got roon next track message while not in playing or paused state");
-            exit(1);
+            warn!("Got roon next track message while not in playing or paused state");
         }
     }
     fn handle_roon_previous_track(&mut self) {
@@ -324,8 +321,7 @@ impl PlayerInternal {
                 play_request_id,
             })
         } else {
-            error!("Got roon prev track message while not in playing or paused state");
-            exit(1);
+            warn!("Got roon prev track message while not in playing or paused state");
         }
     }
     fn handle_roon_volume(&mut self, msg: RoonMessage) {

@@ -95,8 +95,7 @@ impl PlayerInternal {
                prev_track_id
            };
        } else {
-           error!("Called handle_play while not in paused or loading state");
-           exit(1);
+           warn!("Called handle_play while not in paused or loading state");
        }
     }
 
@@ -151,8 +150,7 @@ impl PlayerInternal {
                prev_track_id
            };
        } else {
-           error!("Called handle_pause from state other than playing or loading");
-           exit(1);
+           warn!("Called handle_pause from state other than playing or loading");
        }
     }
 
@@ -160,15 +158,39 @@ impl PlayerInternal {
     fn handle_stop(&mut self) {
         match self.state {
             PlayerState::Invalid => {
-                error!("Called handle_stop from player state Invalid");
-                exit(1);
+                warn!("Called handle_stop from player state Invalid");
             },
-            _ => {
+            PlayerState::Playing {
+                play_request_id,
+                track_id,
+                ..
+            } |
+            PlayerState::Paused {
+                play_request_id,
+                track_id,
+                ..
+            } |
+            PlayerState::Loading {
+                play_request_id,
+                track_id,
+                ..
+            } => {
+                self.state = PlayerState::Stopped;
+                self.yet_to_play = true;
                 self.send_to_roon(SpotifyJSEvent::Stop {
                     zone_id:          self.zone_id.clone(),
                 });
+                self.send_event(PlayerEvent::Stopped {
+                    play_request_id,
+                    track_id
+                });
+            },
+            _ => {
                 self.yet_to_play = true; 
                 self.state = PlayerState::Stopped;
+                self.send_to_roon(SpotifyJSEvent::Stop {
+                    zone_id:          self.zone_id.clone(),
+                });
             }
         }
     }
@@ -226,8 +248,6 @@ impl PlayerInternal {
         play: bool,
         position_ms: u32,
     ) {
-
-        self.yet_to_play = true;
 
         //Check if the requested track has been preloaded already. If so use the preloaded data.
         if let PlayerPreload::Ready {
@@ -332,8 +352,7 @@ impl PlayerInternal {
                 seek_position_ms: position_ms
             });
        } else {
-           error!("Called handle_seek from neither Playing or Paused state");
-           exit(1);
+           warn!("Called handle_seek from neither Playing or Paused state");
        }
     }
 
