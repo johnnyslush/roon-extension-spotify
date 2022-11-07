@@ -220,8 +220,9 @@ impl Zone {
                                         autoplay:        false,
                                     };
                                     discovery = start_discovery(rename_to.clone(), session_config.device_id.clone());
-                                    if let Some(spirc) = spirc.take() {
-                                        spirc.rename(rename_to);
+                                    if let Some(s) = spirc {
+                                        s.rename(rename_to);
+                                        spirc = Some(s);
                                     }
                                 },
                                 _ => ()

@@ -327,7 +327,7 @@ async function spotify_tells_us_to_play({
     logger.info(play_body);
 
     global_core.services.RoonApiAudioInput.play(play_body, (msg, body) => {
-        logger.info({starting_slot: 'PLAY', message:msg, body})
+        logger.info({starting_slot: 'PLAY', message:msg, body, play_body})
         if (!msg) return;
         const event = msg.name;
 
@@ -410,7 +410,7 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
     slots.queue = play_body;
     global_core.services.RoonApiAudioInput.play(play_body,
         (msg, body) => {
-        logger.info({starting_slot: 'QUEUE', message: msg, body})
+        logger.info({starting_slot: 'QUEUE', message: msg, body, play_body})
         if (!msg) return;
         
         const event = msg.name;
