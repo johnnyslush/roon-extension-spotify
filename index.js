@@ -377,13 +377,15 @@ const handle_queue_slot_event = (event, body, slots, zone_id) => {
 async function spotify_tells_us_to_play({
     zone_id,
     now_playing_info,
-    position_ms
+    position_ms,
+    play_request_id,
+    preload_id,
 }) {
 
     const slots = getSlots(zone_id);
 
     // XXX Can we make use of spotify play_request_id?
-    if (slots.queue?.playing && slots.queue?.track_id === now_playing_info.track_id) {
+    if (slots.queue?.playing && slots.queue?.preload_id === preload_id) {
         logger.info('Queue slot started playing succesfully, ignoring and clearing queue slot');
         slots.play  = slots.queue;
         slots.queue = null;
@@ -406,7 +408,7 @@ async function spotify_tells_us_to_play({
         info
     };
 
-    slots.play = { ...play_body, id: _slot_id };
+    slots.play = { ...play_body, id: _slot_id, play_request_id, preload_id };
 
     global_core.services.RoonApiAudioInput.play(play_body, (msg, body) => {
         if (!msg) return;
@@ -421,7 +423,7 @@ async function spotify_tells_us_to_play({
     })
     
 }
-async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
+async function spotify_tells_us_to_preload({ zone_id, now_playing_info, preload_id }) {
     const slots = getSlots(zone_id);
 
     logger.info('spotify told us to preload ' + zone_id);
@@ -439,7 +441,7 @@ async function spotify_tells_us_to_preload({ zone_id, now_playing_info }) {
 
     let _slot_id = inc();
 
-    slots.queue = { ...play_body, id: _slot_id };
+    slots.queue = { ...play_body, id: _slot_id, preload_id };
     global_core.services.RoonApiAudioInput.play(play_body,
         (msg, body) => {
         if (!msg) {

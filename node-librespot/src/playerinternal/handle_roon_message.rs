@@ -34,6 +34,7 @@ impl PlayerInternal {
                 position_ms,
                 duration_ms,
                 suggested_to_preload_next_track,
+                preload_id,
             } => {
                 self.state = PlayerState::Paused {
                     track,
@@ -42,6 +43,7 @@ impl PlayerInternal {
                     position_ms,
                     duration_ms,
                     suggested_to_preload_next_track,
+                    preload_id,
                 };
             },
             _ => {
@@ -61,6 +63,7 @@ impl PlayerInternal {
                 position_ms,
                 duration_ms,
                 suggested_to_preload_next_track,
+                preload_id,
             } => {
                 self.state = PlayerState::Playing {
                     track,
@@ -69,6 +72,7 @@ impl PlayerInternal {
                     position_ms,
                     duration_ms,
                     suggested_to_preload_next_track,
+                    preload_id,
                 };
             },
             _ => {

@@ -33,6 +33,7 @@ impl PlayerInternal {
            position_ms,
            duration_ms,
            suggested_to_preload_next_track,
+           preload_id,
            ..
        } = self.state {
             let old_track = match mem::replace(&mut self.state, PlayerState::Invalid) {
@@ -47,7 +48,9 @@ impl PlayerInternal {
                 self.send_to_roon(SpotifyJSEvent::Play {
                     zone_id:          self.zone_id.clone(),
                     now_playing_info: RoonNowPlaying::new(old_track.audio.clone()),
-                    position_ms:      old_track.start_position_ms.clone()
+                    position_ms:      old_track.start_position_ms.clone(),
+                    play_request_id,
+                    preload_id: preload_id.clone(),
                 });
                 self.yet_to_play = false;
                 self.state = PlayerState::Playing {
@@ -57,6 +60,7 @@ impl PlayerInternal {
                     position_ms,
                     duration_ms,
                     suggested_to_preload_next_track,
+                    preload_id,
                 };
             } else {
                 // We have already played before, so the roon session should be set
@@ -71,12 +75,14 @@ impl PlayerInternal {
                     position_ms,
                     duration_ms,
                     suggested_to_preload_next_track,
+                    preload_id,
                 };
             }
        } else if let PlayerState::Loading {
            track_id,
            play_request_id,
            prev_track_id,
+           preload_id,
            ..
        } = self.state {
            info!("Called handle_play while in loading state, setting start_playback = true");
@@ -92,7 +98,8 @@ impl PlayerInternal {
                track_id,
                play_request_id,
                loader,
-               prev_track_id
+               prev_track_id,
+               preload_id,
            };
        } else {
            warn!("Called handle_play while not in paused or loading state");
@@ -108,6 +115,7 @@ impl PlayerInternal {
            position_ms,
            duration_ms,
            suggested_to_preload_next_track,
+           preload_id,
            ..
        } = self.state {
             let old_track = match mem::replace(&mut self.state, PlayerState::Invalid) {
@@ -127,11 +135,13 @@ impl PlayerInternal {
                 position_ms,
                 duration_ms,
                 suggested_to_preload_next_track,
+                preload_id,
             };
        } else if let PlayerState::Loading {
            track_id,
            play_request_id,
            prev_track_id,
+           preload_id,
            ..
        } = self.state {
            info!("Called handle_pause while in loading state, setting start_playback = false");
@@ -147,7 +157,8 @@ impl PlayerInternal {
                track_id,
                play_request_id,
                loader,
-               prev_track_id
+               prev_track_id,
+               preload_id,
            };
        } else {
            warn!("Called handle_pause from state other than playing or loading");
@@ -216,25 +227,16 @@ impl PlayerInternal {
                 self.preload = PlayerPreload::None;
             }
         }
-        if let PlayerState::Playing {
-            ref mut track,
-            ..
-        }
-        | PlayerState::Paused {
-            ref mut track,
-            ..
-        } = self.state {
-            if track.audio.id == track_id {
-                // we already have the requested track loaded.
-                preload_track = false;
-            }
-        }
-        // schedule the preload of the current track if desired.
+
+        // Cache should handle if preload is same as current track
+        // also need to tell roon to queue current track anyways
         if preload_track {
+            // schedule the preload of the current track if desired.
             let loader = self.load_track(track_id, 0);
             self.preload = PlayerPreload::Loading {
                 track_id,
                 loader: Box::pin(loader),
+                preload_id: self.preload_id_generator.get()
             }
         }
     }
@@ -260,6 +262,8 @@ impl PlayerInternal {
                 if let PlayerPreload::Ready {
                     track_id,
                     loaded_track,
+                    preload_id,
+                    ..
                 } = preload {
                     // let position_pcm = Self::position_ms_to_pcm(position_ms);
                     // XXX Fix stream here with a seek;
@@ -271,7 +275,9 @@ impl PlayerInternal {
                     self.send_to_roon(SpotifyJSEvent::Play {
                         zone_id:          self.zone_id.clone(),
                         now_playing_info: RoonNowPlaying::new(loaded_track.audio.clone()),
-                        position_ms:      loaded_track.start_position_ms.clone()
+                        position_ms:      loaded_track.start_position_ms.clone(),
+                        play_request_id,
+                        preload_id:  Some(preload_id.clone())
                     });
                     self.state = PlayerState::Playing {
                         track_id,
@@ -280,6 +286,7 @@ impl PlayerInternal {
                         duration_ms: loaded_track.audio.duration.clone() as u32,
                         track:       *loaded_track,
                         suggested_to_preload_next_track: false,
+                        preload_id: Some(preload_id)
                     };
                     return;
                 } else {
@@ -299,14 +306,17 @@ impl PlayerInternal {
         });
 
         // Try to extract a pending loader from the preloading mechanism
+        let mut preload_id = None;
         let loader = if let PlayerPreload::Loading { track_id: loaded_track_id, ..  } = self.preload {
             if (track_id == loaded_track_id) && (position_ms == 0) {
                 let mut preload = PlayerPreload::None;
                 std::mem::swap(&mut preload, &mut self.preload);
                 if let PlayerPreload::Loading {
                     loader,
+                    preload_id: _preload_id,
                     ..
                 } = preload {
+                    preload_id = Some(_preload_id); // Need this for when play is called
                     Some(loader)
                 } else {
                     None
@@ -337,6 +347,7 @@ impl PlayerInternal {
             start_playback: play,
             loader,
             prev_track_id,
+            preload_id
         };
     }
 

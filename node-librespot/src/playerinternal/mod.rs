@@ -16,6 +16,7 @@ use crate::player::*;
 use crate::server::{ServerMessage};
 use crate::zone::{SpotifyJSEvent, RoonNowPlaying, RoonMessage};
 
+use librespot::core::util::SeqGenerator;
 use librespot::playback::player::{PlayerEvent};
 use librespot::audio::{AudioFile, AudioDecrypt};
 use librespot::playback::config::{Bitrate, PlayerConfig};
@@ -204,6 +205,7 @@ pub struct PlayerInternal {
     pub preload: PlayerPreload,
     pub event_senders: Vec<mpsc::UnboundedSender<PlayerEvent>>,
 
+    pub preload_id_generator: SeqGenerator<u64>,
     pub auto_normalise_as_album: bool,
 
     //  XXX Roon
@@ -268,6 +270,7 @@ impl Future for PlayerInternal {
                 track_id,
                 start_playback,
                 play_request_id,
+                preload_id,
                 ..
             } = self.state
             {
@@ -278,8 +281,10 @@ impl Future for PlayerInternal {
                             self.yet_to_play = false;
                             self.send_to_roon(SpotifyJSEvent::Play {
                                 zone_id,
+                                play_request_id,
                                 now_playing_info: RoonNowPlaying::new(loaded_track.audio.clone()),
-                                position_ms:      loaded_track.start_position_ms.clone()
+                                position_ms:      loaded_track.start_position_ms.clone(),
+                                preload_id:       preload_id.clone(),
                             });
                             self.send_event(PlayerEvent::Loading {
                                 track_id,
@@ -293,6 +298,7 @@ impl Future for PlayerInternal {
                                 duration_ms: loaded_track.audio.duration.clone() as u32,
                                 track: loaded_track,
                                 suggested_to_preload_next_track: false,
+                                preload_id
                             };
                         } else {
                             self.send_event(PlayerEvent::Paused {
@@ -308,6 +314,7 @@ impl Future for PlayerInternal {
                                 duration_ms: loaded_track.audio.duration.clone() as u32,
                                 track: loaded_track,
                                 suggested_to_preload_next_track: false,
+                                preload_id
                             }
                         }
                     }
@@ -320,6 +327,7 @@ impl Future for PlayerInternal {
             if let PlayerPreload::Loading {
                 ref mut loader,
                 track_id,
+                preload_id
             } = self.preload
             {
                 match loader.as_mut().poll(cx) {
@@ -329,10 +337,12 @@ impl Future for PlayerInternal {
                         self.send_to_roon(SpotifyJSEvent::Preload {
                             zone_id,
                             now_playing_info: RoonNowPlaying::new(loaded_track.audio.clone()),
+                            preload_id: preload_id.clone()
                         });
                         self.preload = PlayerPreload::Ready {
                             loaded_track: Box::new(loaded_track),
-                            track_id
+                            track_id,
+                            preload_id
                         };
                     }
                     Poll::Ready(Err(_e)) => {

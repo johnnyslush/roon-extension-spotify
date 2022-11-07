@@ -62,6 +62,7 @@ impl Player {
                 session,
                 config,
                 commands: cmd_rx,
+                preload_id_generator: SeqGenerator::new(0),
                 state: PlayerState::Stopped,
                 preload: PlayerPreload::None,
                 event_senders: [event_sender].to_vec(),
@@ -163,10 +164,12 @@ pub enum PlayerPreload {
     Loading {
         track_id: SpotifyId,
         loader: Pin<Box<dyn Future<Output = Result<RoonPlayerLoadedTrack, ()>> + Send>>,
+        preload_id: u64
     },
     Ready {
         track_id: SpotifyId,
         loaded_track: Box<RoonPlayerLoadedTrack>,
+        preload_id: u64
     },
 }
 
@@ -178,7 +181,8 @@ pub enum PlayerState {
         play_request_id: u64,
         start_playback: bool,
         loader: Pin<Box<dyn Future<Output = Result<RoonPlayerLoadedTrack, ()>> + Send>>,
-        prev_track_id: Option<SpotifyId>
+        prev_track_id: Option<SpotifyId>,
+        preload_id: Option<u64>,
     },
     Playing {
         track_id: SpotifyId,
@@ -187,6 +191,7 @@ pub enum PlayerState {
         position_ms: u32,
         duration_ms: u32,
         suggested_to_preload_next_track: bool,
+        preload_id: Option<u64>,
     },
     Paused {
         track_id: SpotifyId,
@@ -195,6 +200,7 @@ pub enum PlayerState {
         position_ms: u32,
         duration_ms: u32,
         suggested_to_preload_next_track: bool,
+        preload_id: Option<u64>,
     },
 }
 

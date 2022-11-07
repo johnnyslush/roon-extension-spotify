@@ -73,7 +73,9 @@ pub enum SpotifyJSEvent {
     Play {
         zone_id:          String,
         now_playing_info: RoonNowPlaying,
-        position_ms:      u32
+        position_ms:      u32,
+        play_request_id:  u64,
+        preload_id:       Option<u64>
     },
     Unpause {
         zone_id: String,
@@ -90,7 +92,8 @@ pub enum SpotifyJSEvent {
     },
     Preload {
         zone_id:     String,
-        now_playing_info: RoonNowPlaying
+        now_playing_info: RoonNowPlaying,
+        preload_id:       u64
     },
     Clear {
         zone_id: String,
