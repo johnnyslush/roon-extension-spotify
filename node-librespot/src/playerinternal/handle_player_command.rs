@@ -95,7 +95,7 @@ impl PlayerInternal {
                prev_track_id
            };
        } else {
-           error!("Called handle_play while not in paused state");
+           error!("Called handle_play while not in paused or loading state");
            exit(1);
        }
     }
@@ -129,8 +129,29 @@ impl PlayerInternal {
                 duration_ms,
                 suggested_to_preload_next_track,
             };
+       } else if let PlayerState::Loading {
+           track_id,
+           play_request_id,
+           prev_track_id,
+           ..
+       } = self.state {
+           info!("Called handle_pause while in loading state, setting start_playback = false");
+            let loader = match mem::replace(&mut self.state, PlayerState::Invalid) {
+                PlayerState::Loading { loader, .. } => loader,
+                _ => {
+                    error!("Not in loading state!");
+                    exit(1);
+                }
+            };
+           self.state = PlayerState::Loading {
+               start_playback: false,
+               track_id,
+               play_request_id,
+               loader,
+               prev_track_id
+           };
        } else {
-           error!("Called handle_pause from state other than playing");
+           error!("Called handle_pause from state other than playing or loading");
            exit(1);
        }
     }
@@ -205,6 +226,8 @@ impl PlayerInternal {
         play: bool,
         position_ms: u32,
     ) {
+
+        self.yet_to_play = true;
 
         //Check if the requested track has been preloaded already. If so use the preloaded data.
         if let PlayerPreload::Ready {
