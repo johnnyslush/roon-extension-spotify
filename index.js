@@ -392,7 +392,7 @@ async function spotify_tells_us_to_play({
         return;
     }
 
-    logger.info('spotify told us to play ' + zone_id);
+    logger.info('spotify told us to play ' + zone_id + ' ' + position_ms);
     const session_id = await getOrCreateSession(zone_id);
     const info       = getNowPlaying(now_playing_info);
 
@@ -473,38 +473,58 @@ async function spotify_tells_us_to_clear({ zone_id, slots }) {
     global_core.services.RoonApiAudioInput.clear({ session_id, slots });
 }
 function spotify_tells_us_to_seek({ zone_id, seek_position_ms }) {
-    logger.info({msg: 'Got seek from spotify', zone_id, seek_position_ms});
-    global_core.services.RoonApiTransport.seek(zone_id, 'absolute', seek_position_ms / 1000);
+    if (getSlots(zone_id).play) {
+        logger.info({msg: 'Got seek from spotify', zone_id, seek_position_ms});
+        global_core.services.RoonApiTransport.seek(zone_id, 'absolute', seek_position_ms / 1000);
+    } else {
+        logger.info({msg: 'Got seek from spotify, ignoring nothing in play slot', zone_id, seek_position_ms});
+    }
 }
 function spotify_tells_us_to_pause({ zone_id }) {
-    logger.info({msg: 'Got pause from spotify', zone_id });
-    global_core.services.RoonApiTransport.control(zone_id, "pause");
+    if (getSlots(zone_id).play) {
+        logger.info({msg: 'Got pause from spotify', zone_id });
+        global_core.services.RoonApiTransport.control(zone_id, "pause");
+    } else {
+        logger.info({msg: 'Got pause from spotify, ignoring nothing in play slot', zone_id, });
+    }
 }
 function spotify_tells_us_to_unpause({ zone_id }) {
-    logger.info({msg: 'Got unpause from spotify', zone_id});
-    global_core.services.RoonApiTransport.control(zone_id, "play");
+    if (getSlots(zone_id).play) {
+        logger.info({msg: 'Got unpause from spotify', zone_id});
+        global_core.services.RoonApiTransport.control(zone_id, "play");
+    } else {
+        logger.info({msg: 'Got unpause from spotify, ignoring nothing in play slot', zone_id});
+    }
 }
 function spotify_tells_us_to_stop({ zone_id }) {
-    logger.info({msg: 'Got stop from spotify', zone_id});
-    global_core.services.RoonApiTransport.control(zone_id, "stop");
+    if (getSlots(zone_id).play) {
+        logger.info({msg: 'Got stop from spotify', zone_id});
+        global_core.services.RoonApiTransport.control(zone_id, "stop");
+    } else {
+        logger.info({msg: 'Got stop from spotify, ignoring nothing in play slot', zone_id});
+    }
 }
 function spotify_tells_us_to_set_volume({zone_id, volume}) {
-    logger.info({msg: 'Got set volume from spotify', zone_id, volume});
-    if (!sessions[zone_id]) {
-        logger.info('ignoring volume request, session not started');
-        return;
-    }
-    const scaledVol = volume / 65536; // Spotify sends value between 0 and 65535
-    let zone = zones[zone_id];
-    if (zone && zone.outputs.length == 1 && zone.outputs[0].volume && zone.outputs[0].volume.step) {
-        const volumeHandle = zone.outputs[0].volume;
-        if (volumeHandle.is_muted) {
-            global_core.services.RoonApiTransport.mute(zone.outputs[0],'unmute');
+    if (getSlots(zone_id).play) {
+        logger.info({msg: 'Got set volume from spotify', zone_id, volume});
+        if (!sessions[zone_id]) {
+            logger.info('ignoring volume request, session not started');
+            return;
         }
-        global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
-            'absolute',
-            Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
+        const scaledVol = volume / 65536; // Spotify sends value between 0 and 65535
+        let zone = zones[zone_id];
+        if (zone && zone.outputs.length == 1 && zone.outputs[0].volume && zone.outputs[0].volume.step) {
+            const volumeHandle = zone.outputs[0].volume;
+            if (volumeHandle.is_muted) {
+                global_core.services.RoonApiTransport.mute(zone.outputs[0],'unmute');
+            }
+            global_core.services.RoonApiTransport.change_volume(zone.outputs[0],
+                'absolute',
+                Math.round(volumeHandle.min + (volumeHandle.max - volumeHandle.min) * scaledVol));
+        } else {
+            logger.info("VOLUME SETTING NOT SUPPORTED ON GROUPED ZONES");
+        }
     } else {
-        logger.info("VOLUME SETTING NOT SUPPORTED ON GROUPED ZONES");
+        logger.info({msg: 'Got set volume from spotify, ignoring nothing in play slot', zone_id, volume});
     }
 }

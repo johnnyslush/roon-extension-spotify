@@ -246,17 +246,49 @@ impl PlayerInternal {
         if let PlayerState::Playing {
             track_id,
             play_request_id,
+            position_ms,
+            duration_ms,
             ..
-        } | PlayerState::Paused {
+        } = self.state {
+            self.yet_to_play = true;
+            self.playing_to_paused();
+            self.send_event(PlayerEvent::Paused {
+                track_id,
+                play_request_id,
+                position_ms,
+                duration_ms,
+            });
+        } else if let PlayerState::Paused {
             track_id,
             play_request_id,
             ..
         } = self.state {
-            self.send_event(PlayerEvent::Stopped {
+            self.yet_to_play = true;
+        } else if let PlayerState::Loading {
+            track_id,
+            play_request_id,
+            prev_track_id,
+            preload_id,
+            ..
+        } = self.state {
+            self.yet_to_play = true;
+            let loader = match mem::replace(&mut self.state, PlayerState::Invalid) {
+                PlayerState::Loading { loader, .. } => loader,
+                _ => {
+                    error!("Not in loading state!");
+                    exit(1);
+                }
+            };
+            self.state = PlayerState::Loading {
+                start_playback: false,
                 track_id,
                 play_request_id,
-            });
-            self.state = PlayerState::Stopped;
+                loader,
+                prev_track_id,
+                preload_id,
+            };
+        } else {
+            warn!("Got roon stopped message in state other than playing, paused, loading");
         }
     }
 

@@ -48,9 +48,9 @@ impl PlayerInternal {
                 self.send_to_roon(SpotifyJSEvent::Play {
                     zone_id:          self.zone_id.clone(),
                     now_playing_info: RoonNowPlaying::new(old_track.audio.clone()),
-                    position_ms:      old_track.start_position_ms.clone(),
-                    play_request_id,
                     preload_id: preload_id.clone(),
+                    position_ms,
+                    play_request_id,
                 });
                 self.yet_to_play = false;
                 self.state = PlayerState::Playing {
@@ -352,15 +352,18 @@ impl PlayerInternal {
     }
 
     // Spotify told us to seek, let roon know
-    fn handle_seek(&mut self, position_ms: u32) {
+    fn handle_seek(&mut self, new_position_ms: u32) {
        if let PlayerState::Playing {
+           ref mut position_ms,
            ..
        } | PlayerState::Paused {
+           ref mut position_ms,
            ..
        } = self.state {
+           *position_ms = new_position_ms.clone();
             self.send_to_roon(SpotifyJSEvent::Seek {
                 zone_id: self.zone_id.clone(),
-                seek_position_ms: position_ms
+                seek_position_ms: new_position_ms
             });
        } else {
            warn!("Called handle_seek from neither Playing or Paused state");
