@@ -71,7 +71,7 @@ async function handle_core_paired(core) {
             msg.zones.forEach(z => {
                 host.send_roon_message({
                     type: 'EnableZone',
-                    name: z.display_name,
+                    name: 'Roon - ' + z.display_name,
                     id:   z.zone_id
                 });
             })
@@ -92,7 +92,7 @@ async function handle_core_paired(core) {
                 msg.zones_added.forEach(z => {
                     host.send_roon_message({
                         type: 'EnableZone',
-                        name: z.display_name,
+                        name: 'Roon - ' + z.display_name,
                         id:   z.zone_id,
                     });
                 })
@@ -108,7 +108,7 @@ async function handle_core_paired(core) {
                         host.send_roon_message({
                             type:   'RenameZone',
                             id:     z.zone_id,
-                            name:   z.display_name
+                            name:   'Roon - ' + z.display_name
                         });
                     }
                     // Zone has volume
