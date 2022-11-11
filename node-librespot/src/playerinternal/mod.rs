@@ -371,7 +371,10 @@ impl Future for PlayerInternal {
                 ..
             } = self.state
             {
-                let time_to_end = duration_ms - position_ms;
+                let mut time_to_end = 0;
+                if position_ms < duration_ms {
+                    time_to_end = duration_ms - position_ms;
+                }
                 // XXX look into range_to_end_available in original librespot player
                 if (!*suggested_to_preload_next_track) &&
                     time_to_end < PRELOAD_NEXT_TRACK_BEFORE_END_DURATION_MS {

@@ -355,12 +355,16 @@ impl PlayerInternal {
     fn handle_seek(&mut self, new_position_ms: u32) {
        if let PlayerState::Playing {
            ref mut position_ms,
+           duration_ms,
            ..
        } | PlayerState::Paused {
            ref mut position_ms,
+           duration_ms,
            ..
        } = self.state {
-           *position_ms = new_position_ms.clone();
+           if new_position_ms < duration_ms {
+               *position_ms = new_position_ms.clone();
+           }
             self.send_to_roon(SpotifyJSEvent::Seek {
                 zone_id: self.zone_id.clone(),
                 seek_position_ms: new_position_ms
