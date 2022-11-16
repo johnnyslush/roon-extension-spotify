@@ -25,7 +25,7 @@
         "patches": {
             "./node_modules/thread-stream/lib/worker.js": [
                 "fn = (await realImport(filename))",
-                "fn = realRequire(filename.replace(require('os').platform === 'win32' ? /file:\\/\\/\\/?/ : /file:\\/\\/?/ , ''))"
+                "fn = realRequire(filename.replace(require('os').platform() === 'win32' ? /file:\\/\\/\\/?/ : /file:\\/\\/?/ , ''))"
             ],
             "./node_modules/pino/lib/transport-stream.js": [
                 "fn = (await realImport(toLoad))",
