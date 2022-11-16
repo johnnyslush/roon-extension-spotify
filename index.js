@@ -19,20 +19,6 @@ const transport = pino.transport({
 const logger = pino(transport);
 const os     = require('os');
 
-// Default to localhost, use local network ip if found
-const get_ip = () => {
-    let librespot_http_url = '127.0.0.1';
-    const nets   = os.networkInterfaces();
-    for (const name of Object.keys(nets)) {
-        for (const net of nets[name]) {
-            if (net.family === 'IPv4' && !net.internal) {
-                librespot_http_url = net.address;
-            }
-        }
-    }
-    return librespot_http_url
-}
-
 let sessions  = {};
 let zones     = {};
 let zoneSlots = {};
@@ -45,7 +31,7 @@ let librespot_http_url;
 async function handle_core_paired(core) {
     if (!host) {
         // Create new host
-        librespot_http_url = get_ip();
+        librespot_http_url = core.registration.extension_host;
         host = new Host({
             log_dir,
             base_url: librespot_http_url === "127.0.0.1" ? librespot_http_url : "0.0.0.0", // Host to listen on locally

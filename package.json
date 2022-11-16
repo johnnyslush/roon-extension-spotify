@@ -5,7 +5,7 @@
     "main": "index.js",
     "bin": "index.js",
     "scripts": {
-        "build": "pkg package.json"
+        "build": "cd node-librespot && npm run build && cd .. && pkg package.json"
     },
     "author": "",
     "license": "ISC",
