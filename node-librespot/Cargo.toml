@@ -38,10 +38,11 @@ actix-http-test = "3.0.0"
 
 #librespot = "0.4.1"
 #librespot = { path = "../../librespot", features = ["with-dns-sd"] }
-[target.'cfg(unix)'.dependencies]
-librespot = { git = "https://github.com/johnnyslush/librespot.git", branch = "roon-extension-spotify", features = ["with-dns-sd"] }
-[target.'cfg(windows)'.dependencies]
 librespot = { git = "https://github.com/johnnyslush/librespot.git", branch = "roon-extension-spotify"}
+
+[features]
+default = []
+unix = ["librespot/with-dns-sd"]
 
 [dependencies.neon]
 version = "0.10.1"
