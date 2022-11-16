@@ -5,8 +5,8 @@
     "main": "index.js",
     "bin": "index.js",
     "scripts": {
-        "build:unix": "cd node-librespot && npm run build -- --features=unix && cd .. && pkg package.json",
-        "build:win": "cd node-librespot && npm run build && cd .. && pkg package.json"
+        "build:unix": "cd node-librespot && npm run build -- --release --features=unix && cd .. && pkg package.json",
+        "build:win": "cd node-librespot && npm run build -- --release && cd .. && pkg package.json"
     },
     "author": "",
     "license": "ISC",
